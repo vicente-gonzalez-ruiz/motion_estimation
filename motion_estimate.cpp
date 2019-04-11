@@ -1,7 +1,7 @@
 /* Log-search (define FAST_SEARCH) and brute force bidirectional
    block-based motion estimation.
 
-   
+   gse. 2019.
  */
 
 #include <stdio.h>
@@ -27,7 +27,7 @@
 #include "motion.cpp"
 #include "common.h"
 
-//#define FAST_SEARCH
+#define FAST_SEARCH
 #define TEXTURE_INTERPOLATION_FILTER _5_3
 #define MOTION_INTERPOLATION_FILTER Haar
 
@@ -35,62 +35,46 @@
 
 void local_me_for_block
 (
- MVC_TYPE ****mv,    /* [PREV|NEXT][Y|X][coor_y][coor_x] */
- TC_CPU_TYPE ***ref, /* [PREV|NEXT][coor_y][coor_x] */
+ MVC_TYPE ***mv,     /* [Y|X][coor_y][coor_x] */
+ TC_CPU_TYPE **ref,  /* [coor_y][coor_x] */
  TC_CPU_TYPE **pred, /* [coor_y][coor_x] */
  int luby, int lubx, /* Coordinate upper-left block. */
  int rbby, int rbbx, /* Coordinate lower-right block. */
  int by, int bx      /* Vector coordinate in the field of movement. */
  ) {
 
-  int min_error[2];
-  int vy[2], vx[2];
+  int min_error;
+  int vy, vx;
 
-  MVC_TYPE mv_prev_y_by_bx = mv[PREV][Y_FIELD][by][bx];
-  MVC_TYPE mv_prev_x_by_bx = mv[PREV][X_FIELD][by][bx];
-  MVC_TYPE mv_next_y_by_bx = mv[NEXT][Y_FIELD][by][bx];
-  MVC_TYPE mv_next_x_by_bx = mv[NEXT][X_FIELD][by][bx];
+  MVC_TYPE mv_y_by_bx = mv[Y_FIELD][by][bx];
+  MVC_TYPE mv_x_by_bx = mv[X_FIELD][by][bx];
 
 #define COMPUTE_ERRORS(_y,_x)						\
-  MVC_TYPE y[2] = {(MVC_TYPE)(mv_prev_y_by_bx + _y),                    \
-		   (MVC_TYPE)(mv_next_y_by_bx - _y)};			\
-  MVC_TYPE x[2] = {(MVC_TYPE)(mv_prev_x_by_bx + _x),                    \
-		   (MVC_TYPE)(mv_next_x_by_bx - _x)};			\
-  int error[2] = {0, 0};						\
+  MVC_TYPE y = (MVC_TYPE)(mv_y_by_bx + _y);				\
+  MVC_TYPE x = (MVC_TYPE)(mv_x_by_bx + _x);				\
+  int error = 0;							\
   									\
   for(int py=luby; py<rbby; py++) {					\
     TC_CPU_TYPE *pred_py = pred[py];					\
     for(int px=lubx; px<rbbx; px++) {					\
-      error[PREV] += abs						\
-	(pred_py[px] - ref[PREV][py + y[PREV]][px + x[PREV]]);		\
-      error[NEXT] += abs						\
-	(pred_py[px] - ref[NEXT][py + y[NEXT]][px + x[NEXT]]);		\
+      error += abs							\
+	(pred_py[px] - ref[py + y][px + x]);				\
     }									\
   }
 
 #define UPDATE_VECTORS							\
-  if(error[PREV] <= min_error[PREV]) {					\
-    vy[PREV] = y[PREV];							\
-    vx[PREV] = x[PREV];							\
-    min_error[PREV] = error[PREV];					\
-  }									\
-									\
-  if(error[NEXT] <= min_error[NEXT]) {					\
-    vy[NEXT] = y[NEXT];							\
-    vx[NEXT] = x[NEXT];							\
-    min_error[NEXT] = error[NEXT];					\
+  if(error <= min_error) {						\
+    vy = y;								\
+    vx = x;								\
+    min_error = error;							\
   }
 
   /* 1. Position (-1,-1). Up - Left. */ {
     COMPUTE_ERRORS(-1,-1);
     
-    min_error[PREV] = error[PREV];
-    vy[PREV] = y[PREV];
-    vx[PREV] = x[PREV];
-
-    min_error[NEXT] = error[NEXT];
-    vy[NEXT] = y[NEXT];
-    vx[NEXT] = x[NEXT];
+    min_error = error;
+    vy = y;
+    vx = x;
   }
   
   /* 2. Position (-1,1). Up - Right. */ {
@@ -136,10 +120,8 @@ void local_me_for_block
 #undef COMPUTE_ERRORS
 #undef UPDATE_VECTORS
   
-  mv[PREV][Y_FIELD][by][bx] = vy[PREV];
-  mv[PREV][X_FIELD][by][bx] = vx[PREV];
-  mv[NEXT][Y_FIELD][by][bx] = vy[NEXT];
-  mv[NEXT][X_FIELD][by][bx] = vx[NEXT];
+  mv[Y_FIELD][by][bx] = vy;
+  mv[X_FIELD][by][bx] = vx;
 
 } /* local_me_for_block() */
 
@@ -147,8 +129,8 @@ void local_me_for_block
  * predicted picture, use a search area of +-1. */
 void local_me_for_picture
 (
- MVC_TYPE ****mv,             /* [PREV|NEXT][Y|X][coor_y][coor_x] */
- TC_CPU_TYPE ***ref,          /* [PREV|NEXT][coor_y][coor_x] */
+ MVC_TYPE ***mv,              /* [Y|X][coor_y][coor_x] */
+ TC_CPU_TYPE **ref,           /* [coor_y][coor_x] */
  TC_CPU_TYPE **pred,          /* [coor_y][coor_x] */
  int block_size,
  int border_size,
@@ -180,8 +162,8 @@ int desp(int x, int y) {
 # endif /* FAST_SEARCH */
 
 void me_for_picture
-(MVC_TYPE ****mv,               /* [PREV|NEXT][y_field|x_field][y_coor][x_coor] */
- TC_CPU_TYPE ***ref,            /* [PREV|NEXT][y_coor][x_coor] */
+(MVC_TYPE ***mv,                /* [y_field|x_field][y_coor][x_coor] */
+ TC_CPU_TYPE **ref,             /* [y_coor][x_coor] */
  TC_CPU_TYPE **pred,            /* [y_coor][x_coor] */
  int pixels_in_y,
  int pixels_in_x,
@@ -200,8 +182,7 @@ void me_for_picture
   info("motion_estimate: dwt_levels = %d\n", dwt_levels);
 
   /* DWT applied to pictures. */
-  pic_dwt->analyze(ref[PREV], pixels_in_y, pixels_in_x, dwt_levels);
-  pic_dwt->analyze(ref[NEXT], pixels_in_y, pixels_in_x, dwt_levels);
+  pic_dwt->analyze(ref, pixels_in_y, pixels_in_x, dwt_levels);
   pic_dwt->analyze(pred, pixels_in_y, pixels_in_x, dwt_levels);
 
   /* Over-pixel estimation. */
@@ -229,39 +210,25 @@ void me_for_picture
     /*  Motion fields expanded by a factor of 2. This is necessary
 	because in the next iteration the reference and predicted
 	pictures are twice as large. */
-    mv_dwt->synthesize(mv[PREV][Y_FIELD], blocks_in_y_l, blocks_in_x_l, 1);
-    mv_dwt->synthesize(mv[NEXT][Y_FIELD], blocks_in_y_l, blocks_in_x_l, 1);
-    mv_dwt->synthesize(mv[PREV][X_FIELD], blocks_in_y_l, blocks_in_x_l, 1);
-    mv_dwt->synthesize(mv[NEXT][X_FIELD], blocks_in_y_l, blocks_in_x_l, 1);
+    mv_dwt->synthesize(mv[Y_FIELD], blocks_in_y_l, blocks_in_x_l, 1);
+    mv_dwt->synthesize(mv[X_FIELD], blocks_in_y_l, blocks_in_x_l, 1);
     
     /* Multiply by 2 the motion vectors, because the calculated values
        now referenced to an picture twice as large in each dimension. */
     for(int by=0; by<blocks_in_y_l; by++) {
       for(int bx=0; bx<blocks_in_x_l; bx++) {
 
-	mv[PREV][Y_FIELD][by][bx] *= 2;
-	if(mv[PREV][Y_FIELD][by][bx] > search_range)
-	  mv[PREV][Y_FIELD][by][bx] = search_range;
-	if(mv[PREV][Y_FIELD][by][bx] < -search_range)
-	  mv[PREV][Y_FIELD][by][bx] = -search_range;
+	mv[Y_FIELD][by][bx] *= 2;
+	if(mv[Y_FIELD][by][bx] > search_range)
+	  mv[Y_FIELD][by][bx] =  search_range;
+	if(mv[Y_FIELD][by][bx] < -search_range)
+	  mv[Y_FIELD][by][bx] = -search_range;
 
-	mv[NEXT][Y_FIELD][by][bx] *= 2;
-	if(mv[NEXT][Y_FIELD][by][bx] > search_range)
-	  mv[NEXT][Y_FIELD][by][bx] =  search_range;
-	if(mv[NEXT][Y_FIELD][by][bx] < -search_range)
-	  mv[NEXT][Y_FIELD][by][bx] = -search_range;
-
-	mv[PREV][X_FIELD][by][bx] *= 2;
-	if(mv[PREV][X_FIELD][by][bx] > search_range)
-	  mv[PREV][X_FIELD][by][bx] =  search_range;
-	if(mv[PREV][X_FIELD][by][bx] < -search_range)
-	  mv[PREV][X_FIELD][by][bx] = -search_range;
-
-	mv[NEXT][X_FIELD][by][bx] *= 2;
-	if(mv[NEXT][X_FIELD][by][bx] > search_range)
-	  mv[NEXT][X_FIELD][by][bx] =  search_range;
-	if(mv[NEXT][X_FIELD][by][bx] < -search_range)
-	  mv[NEXT][X_FIELD][by][bx] = -search_range;
+	mv[X_FIELD][by][bx] *= 2;
+	if(mv[X_FIELD][by][bx] > search_range)
+	  mv[X_FIELD][by][bx] =  search_range;
+	if(mv[X_FIELD][by][bx] < -search_range)
+	  mv[X_FIELD][by][bx] = -search_range;
       }
     }
     info("motion_estimate: over-pixel motion estimation level=%d\n",l);
@@ -278,61 +245,58 @@ void me_for_picture
     info("motion_estimate: sub-pixel motion estimation level=%d\n",l);
     
     /* Expand pictures on a factor of 2. */
-    pic_dwt->synthesize(ref[PREV], pixels_in_y<<l, pixels_in_x<<l, 1);
-    pic_dwt->synthesize(ref[NEXT], pixels_in_y<<l, pixels_in_x<<l, 1);
+    pic_dwt->synthesize(ref, pixels_in_y<<l, pixels_in_x<<l, 1);
     pic_dwt->synthesize(pred, pixels_in_y<<l, pixels_in_x<<l, 1);
     
     /* Motion fields expanded by a factor of 2. */
     for(int by=0; by<blocks_in_y; by++) {
       for(int bx=0; bx<blocks_in_x; bx++) {
 
-	mv[PREV][Y_FIELD][by][bx] *= 2;
-	if(mv[PREV][Y_FIELD][by][bx]>(search_range<<subpixel_accuracy))
-	  mv[PREV][Y_FIELD][by][bx] = search_range<<subpixel_accuracy;
-	if(mv[PREV][Y_FIELD][by][bx]<-(search_range<<subpixel_accuracy))
-	  mv[PREV][Y_FIELD][by][bx]= -(search_range<<subpixel_accuracy);
+	mv[Y_FIELD][by][bx] *= 2;
+	if(mv[Y_FIELD][by][bx]>(search_range<<subpixel_accuracy))
+	  mv[Y_FIELD][by][bx] = search_range<<subpixel_accuracy;
+	if(mv[Y_FIELD][by][bx]<-(search_range<<subpixel_accuracy))
+	  mv[Y_FIELD][by][bx]= -(search_range<<subpixel_accuracy);
 
-	mv[NEXT][Y_FIELD][by][bx] *= 2;
-	if(mv[NEXT][Y_FIELD][by][bx]>(search_range<<subpixel_accuracy))
-	  mv[NEXT][Y_FIELD][by][bx] = search_range<<subpixel_accuracy;
-	if(mv[NEXT][Y_FIELD][by][bx]<-(search_range<<subpixel_accuracy))
-	  mv[NEXT][Y_FIELD][by][bx]= -(search_range<<subpixel_accuracy);
-
-	mv[PREV][X_FIELD][by][bx] *= 2;
-	if(mv[PREV][X_FIELD][by][bx]>(search_range<<subpixel_accuracy))
-	  mv[PREV][X_FIELD][by][bx] = (search_range<<subpixel_accuracy);
-	if(mv[PREV][X_FIELD][by][bx]<-(search_range<<subpixel_accuracy))
-	  mv[PREV][X_FIELD][by][bx]= -(search_range<<subpixel_accuracy);
-
-	mv[NEXT][X_FIELD][by][bx] *= 2;
-	if(mv[NEXT][X_FIELD][by][bx]>(search_range<<subpixel_accuracy))
-	  mv[NEXT][X_FIELD][by][bx] = (search_range<<subpixel_accuracy);
-	if(mv[NEXT][X_FIELD][by][bx]<-(search_range<<subpixel_accuracy))
-	  mv[NEXT][X_FIELD][by][bx]= -(search_range<<subpixel_accuracy);
+	mv[X_FIELD][by][bx] *= 2;
+	if(mv[X_FIELD][by][bx]>(search_range<<subpixel_accuracy))
+	  mv[X_FIELD][by][bx] = (search_range<<subpixel_accuracy);
+	if(mv[X_FIELD][by][bx]<-(search_range<<subpixel_accuracy))
+	  mv[X_FIELD][by][bx]= -(search_range<<subpixel_accuracy);
       }
     }
     
     local_me_for_picture(mv,
-		       ref,
-		       pred,
-		       block_size<<l,
-		       border_size>>l,
-		       blocks_in_y, blocks_in_x);
+			 ref,
+			 pred,
+			 block_size<<l,
+			 border_size>>l,
+			 blocks_in_y, blocks_in_x);
   }
 
   /* Interpolate. */
-  pic_dwt->analyze(ref[PREV], pixels_in_y << subpixel_accuracy, pixels_in_x << subpixel_accuracy, subpixel_accuracy);
-  pic_dwt->analyze(ref[NEXT], pixels_in_y << subpixel_accuracy, pixels_in_x << subpixel_accuracy, subpixel_accuracy);
-  pic_dwt->analyze(pred, pixels_in_y << subpixel_accuracy, pixels_in_x << subpixel_accuracy, subpixel_accuracy);
+  pic_dwt->analyze(ref,
+		   pixels_in_y << subpixel_accuracy,
+		   pixels_in_x << subpixel_accuracy,
+		   subpixel_accuracy);
+  pic_dwt->analyze(pred,
+		   pixels_in_y << subpixel_accuracy,
+		   pixels_in_x << subpixel_accuracy,
+		   subpixel_accuracy);
 
   //pic_dwt->analyze(reference_pic, Y<<subpixel_accuracy, X<<subpixel_accuracy, subpixel_accuracy);
   //pic_dwt->analyze(predicted_pic, Y<<subpixel_accuracy, X<<subpixel_accuracy, subpixel_accuracy);
 
 #else /* !defined FAST_SEARCH */
 
-  pic_dwt->synthesize(ref[0], pixels_in_y<<subpixel_accuracy, pixels_in_x<<subpixel_accuracy, subpixel_accuracy);
-  pic_dwt->synthesize(ref[1], pixels_in_y<<subpixel_accuracy, pixels_in_x<<subpixel_accuracy, subpixel_accuracy);
-  pic_dwt->synthesize(pred, pixels_in_y<<subpixel_accuracy, pixels_in_x<<subpixel_accuracy, subpixel_accuracy);
+  pic_dwt->synthesize(ref,
+		      pixels_in_y<<subpixel_accuracy,
+		      pixels_in_x<<subpixel_accuracy,
+		      subpixel_accuracy);
+  pic_dwt->synthesize(pred,
+		      pixels_in_y<<subpixel_accuracy,
+		      pixels_in_x<<subpixel_accuracy,
+		      subpixel_accuracy);
   
   block_size <<= subpixel_accuracy;
   search_range <<= subpixel_accuracy;
@@ -358,14 +322,8 @@ void me_for_picture
 	    for(int x=-border_size; x<block_size+border_size; x++) {
 	      error += abs(pred[by*block_size+y][bx*block_size+x] -
 			   ref
-			   [0]
 			   [ry + mv[NEXT][Y_FIELD][by][bx] + y]
 			   [rx + mv[NEXT][X_FIELD][by][bx] + x]);
-	      error += abs(pred[by*block_size+y][bx*block_size+x] -
-			   ref
-			   [1]
-			   [by*block_size*2 - ry + mv[PREV][Y_FIELD][by][bx] + y]
-			   [bx*block_size*2 - rx + mv[PREV][X_FIELD][by][bx] + x]);
 	    }
 	  }
 	  if(error < min_error) {
@@ -392,14 +350,8 @@ void me_for_picture
 	     for(int x=-border_size; x<block_size+border_size; x++) {
 	      error += abs(pred[by*block_size+y][bx*block_size+x] -
 			   ref
-			   [0]
 			   [ry + mv[NEXT][Y_FIELD][by][bx] + y]
 			   [rx + mv[NEXT][X_FIELD][by][bx] + x]);
-	      error += abs(pred[by*block_size+y][bx*block_size+x] -
-			   ref
-			   [1]
-			   [by*block_size*2 - ry + mv[PREV][Y_FIELD][by][bx] + y]
-			   [bx*block_size*2 - rx + mv[PREV][X_FIELD][by][bx] + x]);
 	    }
 	  }
 	  if(error <= min_error) {
@@ -417,10 +369,8 @@ void me_for_picture
 	}
       }
 
-      mv[NEXT][Y_FIELD][by][bx] += vy;
-      mv[NEXT][X_FIELD][by][bx] += vx;
-      mv[PREV][Y_FIELD][by][bx] += -vy;
-      mv[PREV][X_FIELD][by][bx] += -vx;
+      mv[Y_FIELD][by][bx] += vy;
+      mv[X_FIELD][by][bx] += vx;
       
       //print("\nvector = %d,%d,%d,%d",mv[NEXT][Y][by][bx],mv[NEXT][X][by][bx],mv[PREV][Y][by][bx],mv[PREV][X][by][bx]);
     }
@@ -444,11 +394,10 @@ int main(int argc, char *argv[]) {
 
   int block_size = 32;
   int border_size = 0;
-  char *even_fn = (char *)"E";
+  char *current_fn = (char *)"current";
   char *imotion_fn = (char *)"/dev/zero";
   char *motion_fn = (char *)"motion";
-  char *odd_fn = (char *)"O";
-  int pictures = 9;
+  char *next_fn = (char *)"next";
   int pixels_in_x = 352;
   int pixels_in_y = 288;
   int search_range = 4;
@@ -460,11 +409,11 @@ int main(int argc, char *argv[]) {
     /* http://www.gnu.org/software/libc/manual/html_node/Getopt-Long-Option-Example.html */
     static struct option long_options[] = {
       {"block_size", required_argument, 0, 'b'},
+      {"current_fn", required_argument, 0, 'c'},
       {"border_size", required_argument, 0, 'd'},
-      {"even_fn", required_argument, 0, 'e'},
       {"imotion_fn", required_argument, 0, 'i'},
       {"motion_fn", required_argument, 0, 'm'},
-      {"odd_fn", required_argument, 0, 'o'},
+      {"next_fn", required_argument, 0, 'n'},
       {"pictures", required_argument, 0, 'p'},
       {"pixels_in_x", required_argument, 0, 'x'},
       {"pixels_in_y", required_argument, 0, 'y'},
@@ -476,7 +425,7 @@ int main(int argc, char *argv[]) {
 
     int option_index = 0;
     
-    c = getopt_long(argc, argv, "b:d:e:i:m:o:p:x:y:s:a:?", long_options, &option_index);
+    c = getopt_long(argc, argv, "b:c:d:i:m:n:p:x:y:s:a:?", long_options, &option_index);
 
     if(c==-1) {
       /* There are no more options. */
@@ -499,9 +448,9 @@ int main(int argc, char *argv[]) {
       info("%s: block_size=%d\n", argv[0], block_size);
       break;
       
-    case 'e':
-      even_fn = optarg;
-      info("%s: even_fn=\"%s\"\n", argv[0], even_fn);
+    case 'c':
+      current_fn = optarg;
+      info("%s: current_fn=\"%s\"\n", argv[0], current_fn);
       break;
 
     case 'i':
@@ -514,9 +463,9 @@ int main(int argc, char *argv[]) {
       info("%s: motion_fn=\"%s\"\n", argv[0], motion_fn);
       break;
 
-    case 'o':
-      odd_fn = optarg;
-      info("%s: odd_fn=\"%s\"\n", argv[0], odd_fn);
+    case 'n':
+      next_fn = optarg;
+      info("%s: next_fn=\"%s\"\n", argv[0], next_fn);
       break;
 
     case 'd':
@@ -550,20 +499,20 @@ int main(int argc, char *argv[]) {
       break;
       
     case '?':
-      printf("+----------------------+\n");
-      printf("| MCTF motion_estimate |\n");
-      printf("+----------------------+\n");
+      printf("+-----------------+\n");
+      printf("| motion_estimate |\n");
+      printf("+-----------------+\n");
       printf("\n");
-      printf("   Block-based time-domain motion estimation.\n");
+      printf("   Block-based motion estimation.\n");
       printf("\n");
       printf("  Parameters:\n");
       printf("\n");
       printf("   -[-b]lock_size = size of the blocks in the motion estimation process (%d)\n", block_size);
+      printf("   -[-c]urrent_fn = current frame (\"%s\")\n", current_fn);
       printf("   -[-]bor[d]der_size = size of the border of the blocks in the motion estimation process (%d)\n", border_size);
-      printf("   -[-e]ven_fn = input file with the even pictures (\"%s\")\n", even_fn);
       printf("   -[-i]motion_fn = input file with the initial motion fields (\"%s\")\n", imotion_fn);
       printf("   -[-m]otion_fn = output file with the motion fields (\"%s\")\n", imotion_fn);
-      printf("   -[-o]dd_fn = input file with odd pictures (\"%s\")\n", odd_fn);
+      printf("   -[-n]ext_fn = next frame (\"%s\")\n", next_fn);
       printf("   -[-p]ictures = number of pictures to process (%d)\n", pictures);
       printf("   -[-]pixels_in_[x] = size of the X dimension of the pictures (%d)\n", pixels_in_x);
       printf("   -[-]pixels_in_[y] = size of the Y dimension of the pictures (%d)\n", pixels_in_y);
@@ -593,40 +542,23 @@ int main(int argc, char *argv[]) {
 
   texture < TC_IO_TYPE, TC_CPU_TYPE > texture;
 
-  TC_CPU_TYPE **reference[2];
-  for(int i=0; i<2; i++) {
-    reference[i] =
-      texture.alloc(pixels_in_y << subpixel_accuracy,
-		    pixels_in_x << subpixel_accuracy,
-		    picture_border_size << subpixel_accuracy/*2*/);
-
-    /* This initialization seems to be unnecessary. */
-    for(int y=0; y<pixels_in_y << subpixel_accuracy; y++) {
-      for(int x=0; x<pixels_in_x <<subpixel_accuracy; x++) {
-	reference[i][y][x] = 0;
-      }
-    }
-  }
-  
-  TC_CPU_TYPE **predicted =
+  TC_CPU_TYPE **current =
     texture.alloc(pixels_in_y << subpixel_accuracy,
 		  pixels_in_x << subpixel_accuracy,
 		  picture_border_size << subpixel_accuracy/*2*/);
 
-  /* This initialization seems to be unnecessary. */
-  for(int y=0; y<pixels_in_y << subpixel_accuracy; y++) {
-    for(int x=0; x<pixels_in_x <<subpixel_accuracy; x++) {
-      predicted[y][x] = 0;
-    }
-  }
-
+  TC_CPU_TYPE **next =
+    texture.alloc(pixels_in_y << subpixel_accuracy,
+		  pixels_in_x << subpixel_accuracy,
+		  picture_border_size << subpixel_accuracy/*2*/);
+  
   int blocks_in_y = pixels_in_y/block_size;
   int blocks_in_x = pixels_in_x/block_size;
   info("%s: blocks_in_y=%d\n", argv[0], blocks_in_y);
   info("%s: blocks_in_x=%d\n", argv[0], blocks_in_x);
 
   motion < MVC_TYPE > motion;
-  MVC_TYPE ****mv = motion.alloc(blocks_in_y, blocks_in_x);
+  MVC_TYPE ***mv = motion.alloc(blocks_in_y, blocks_in_x);
 
   class dwt2d <
   TC_CPU_TYPE, TEXTURE_INTERPOLATION_FILTER <
