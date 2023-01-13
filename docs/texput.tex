@@ -73,16 +73,22 @@ motion vectors.
 \section{Searching strategies}
 %{{{
 
-\begin{itemize}
-\item
-  Only performed by the compressor.
-  
-  \begin{itemize}
-    \tightlist
-  \item \textbf{Full search}: All the
-    possibilities are checked (see the
-    Fig.~\ref{fig:full_search}). Advantage: the highest compression
-    ratios. Disadvantage: CPU killer.  \end{itemize}
+Uauslly, only performed by the compressor.
+
+\begin{figure}
+  \svg{graphics/spiral_search}{500}
+  \caption{$\pm$ 1 spiral search. Notice tha, in the case that all the
+    comparisons have the same error, the null motion vector is
+    selected.}
+  \label{fig:spiral_search}
+\end{figure}
+
+\subsection{Full (exhaustive) search}
+All the possibilities are checked (see the
+Fig.~\ref{fig:full_search}). Advantage: the highest compression
+ratios. Disadvantage: CPU killer. Usually, to maximize the number of
+vectors equal to zero, a spiral search is performed (see
+Fig.~\cite{fig:spiral_search}).
   
   \begin{figure}
     \svg{graphics/full_search}{500}
@@ -108,17 +114,9 @@ motion vectors.
     can be done supposing that the motion vector of the same macro-block
     in two consecutive images is similar.
   \end{itemize}
-\end{itemize}
-
-\section{Searching patterns}
 
 \begin{itemize}
   \textbf{}:
-\begin{figure}[h]
-  \svg{graphics/spiral_search}{500}
-  \caption{Spiral search.}
-  \label{fig:spiral_search}
-\end{figure}
 
 \begin{itemize}
   \tightlist
@@ -128,6 +126,7 @@ motion vectors.
 
 \item Farneback (incluir .tex).
 
+\end{itemize}
 %%%%%%%%%%%%%
 
 \section{RDO}
