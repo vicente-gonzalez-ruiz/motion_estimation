@@ -3,8 +3,8 @@ libxext6
 bc
 ffmpeg
 imagemagick
-cm-super
-dvipng
-texlive-latex-extra
-texlive-fonts-recommended
-texlive-full
+#cm-super
+#dvipng
+#texlive-latex-extra
+#texlive-fonts-recommended
+#texlive-full
