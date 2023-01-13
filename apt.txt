@@ -1,3 +1,7 @@
 libsm6
 libxext6
+bc
 ffmpeg
+imagemagick
+cm-super
+dvipng
