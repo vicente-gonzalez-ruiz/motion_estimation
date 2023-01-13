@@ -5,3 +5,5 @@ ffmpeg
 imagemagick
 cm-super
 dvipng
+texlive-latex-extra
+texlive-fonts-recommended
