@@ -59,10 +59,10 @@ should provide subpixel displacements.
 This problem can be mitigated if the predictions are generated after:
 (1) interpolate the reference(s) image(s), and (2)
 subsample\footnote{This operation implies a filtering to avoid the
-aliasing after the downsampling.} the prediction to the resolution of
-the predicted image. For example, in MPEG-1, the motion estimation can have up to 1/2
-  pixel accuracy. A bi-linear interpolator is used (see the
-  Fig.~\ref{fig:interpolation}).
+  aliasing after the downsampling.} the prediction to the resolution
+of the predicted image. For example, in MPEG-1, the motion estimation
+can have up to 1/2 pixel accuracy. In this case, a bi-linear
+interpolator is used (see the Fig.~\ref{fig:interpolation}).
 
 Unfortunately, the use of subpixel accuracy increases
 the entropy of the motion information and, potentially, the number of
@@ -71,23 +71,26 @@ motion vectors.
 %}}}
 
 \section{Searching strategies}
+%{{{
+
 \begin{itemize}
 \item
   Only performed by the compressor.
-
-  \begin{itemize} \tightlist \item \textbf{Full search}: All the
-  possibilities are checked (see the
-  Fig.~\ref{fig:full_search}). Advantage: the best
-  compression. Disadvantage: CPU killer.  \end{itemize}
-
+  
+  \begin{itemize}
+    \tightlist
+  \item \textbf{Full search}: All the
+    possibilities are checked (see the
+    Fig.~\ref{fig:full_search}). Advantage: the highest compression
+    ratios. Disadvantage: CPU killer.  \end{itemize}
+  
   \begin{figure}
     \svg{graphics/full_search}{500}
     \caption{The full search scheme.}
     \label{fig:full_search}
   \end{figure}
   
-  \begin{itemize}
-  \tightlist
+  %\tightlist
   \item
     \textbf{Logaritmic search}: It is a version of the full search algorithm
     where the macro-blocks and the search area are sub-sampled. After
@@ -95,10 +98,10 @@ motion vectors.
     of 2 and the previous match is refined in a search area of
     $\pm 1$, until the maximal resolution (even using subpixel
     accuracy) is reached.
-  \end{itemize}
+  %\end{itemize}
 
-  \begin{itemize}
-  \tightlist
+  %\begin{itemize}
+  %\tightlist
   \item
     \textbf{Telescopic search}: Any of the previously described
     techniques can be speeded up if the searching area is reduced. This
