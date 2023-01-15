@@ -12,7 +12,7 @@ def colorize(MVs):
     rgb = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
     return rgb
 
-def show_vectors(flow, dpi=75, title=None):
+def show_vectors(flow, dpi=150, title=None):
     #plt.figure.set_dpi(200)
     plt.figure(dpi=dpi)
     plt.quiver(flow[..., 0][::-1], flow[..., 1])

@@ -62,9 +62,9 @@ def dense_ME(predicted, reference, search_range=32, overlapping_area_side=17):
             error = extended_reference[y : predicted.shape[0] + y,
                                        x : predicted.shape[1] + x] - predicted
             A_error = abs(error) # Ojo probar MSE
-            blur_A_error = cv2.GaussianBlur(a_error, (overlapping_area_side, overlapping_area_side), 0).astype(np.int)
+            blur_A_error = cv2.GaussianBlur(A_error, (overlapping_area_side, overlapping_area_side), 0).astype(np.int32)
             which_min = blur_A_error <= min_error
             flow[:,:,0] = np.where(which_min, x - search_range//2, flow[:,:,0])
             flow[:,:,1] = np.where(which_min, y - search_range//2, flow[:,:,1])
             min_error = np.minimum(min_error, blur_A_error)
-    return flow.astype(np.float)
+    return flow.astype(np.float32)
