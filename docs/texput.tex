@@ -1,9 +1,24 @@
 % Emacs, this is -*-latex-*-
 
+% https://s18798.pcdn.co/videolab/wp-content/uploads/sites/10258/2019/04/MotionEstimation.pdf (explica OF)
+
 \title{\href{https://vicente-gonzalez-ruiz.github.io/motion_estimation}{Motion Estimation}}
 % No temporal schemes such as III..., IPP..., IBP..., MCTF ... only basic ME/MC.
 
 \maketitle
+
+\section{Causes of motion}
+\begin{enumerate}
+\item Still camera, moving objects.
+\item Still scene, moving camera.
+\item Moving objects, moving camera.
+\end{enumerate}
+
+Notice that the motion captured by the camera is a projection of the
+3D movement of the objects in the scene to the 2D plane captured by
+the camera.
+
+Notice that captured motion is undefined in occluded regions.
 
 \section{Idea}
 %{{{
@@ -22,8 +37,8 @@ decoding process.
 In its simplest form, a motion compensated transform inputs one (or
 more) reference frame(s) ${\mathbf R}=\{{\mathbf R}_i\}$, and a motion
 vectors field $\overset{{\mathbf R}\rightarrow{\mathbf P}}{\mathbf M}$
-that indicates how to project ${\mathbf R}$ onto the predicted frame
-${\mathbf P}$, and outputs a prediction frame
+that indicates how to project ${\mathbf R}$ onto the predicted
+(anchor) frame ${\mathbf P}$, and outputs a prediction frame
 \begin{equation}
   \hat{{\mathbf P}} =  \overset{{\mathbf R}\rightarrow {\mathbf P}}{\mathbf M}({\mathbf R}).
   \label{eq:MCP1}
@@ -138,6 +153,11 @@ disadvantage of such issue is that the entropy of the motion fields
 increases, which also decreases the compression ratio.
 
 %}}}
+
+\section{Deformable block matching}
+
+Allows to matp affine and bilinear motion estimation models for
+objects.
 
 \section{Overlapped block matching}
 
@@ -269,7 +289,7 @@ Fig.~\cite{fig:spiral_search}).
 
 %}}}
 
-\subsection{Logaritmic search}
+\subsection{Hierarchical search}
 %{{{
 
 It is a version of the full search algorithm where the blocks
