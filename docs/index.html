@@ -19,14 +19,14 @@
 
 <h2 class='titleHead'><a href='https://vicente-gonzalez-ruiz.github.io/motion_estimation'>Motion Estimation</a></h2>
  <div class='author'><a href='https://cms.ual.es/UAL/personas/persona.htm?id=515256515553484875'><span class='ecrm-1200'>Vicente González Ruiz</span></a> <span class='ecrm-1200'>- </span><a href='https://cms.ual.es/UAL/universidad/departamentos/informatica/index.htm'><span class='ecrm-1200'>Depto Informática</span></a> <span class='ecrm-1200'>- </span><a href='https://www.ual.es'><span class='ecrm-1200'>UAL</span></a></div><br />
-<div class='date'><span class='ecrm-1200'>January 14, 2023</span></div>
+<div class='date'><span class='ecrm-1200'>January 17, 2023</span></div>
    </div>
    <h3 class='sectionHead' id='idea'><span class='titlemark'>1   </span> <a id='x1-10001'></a>Idea</h3>
 <!-- l. 11 --><p class='noindent'>In some 3D signals processed as sequences of 2D frames (for example, in a video that
 is a sequence of frames), <a href='https://en.wikipedia.org/wiki/Motion_estimation'>motion estimation</a> techniques find a mapping between such
 frames. Such mappings between two or more frames (usually, in the form of one or
 more motion vector fields per frame) can be used in motion compensated transforms,
-such as Hybrid Coding <span class='cite'>[<span class='ecbx-1000'>?</span>]</span> and MCTF <span class='cite'>[<span class='ecbx-1000'>?</span>]</span>). Notice that in these examples of
+such as Hybrid Coding <span class='cite'>[<span class='ecbx-1000'>?</span>]</span> and MCTF <span class='cite'>[<a href='#Xvruiz__MCTF'>3</a>]</span>). Notice that in these examples of
 temporal transforms, the motion information must be available also during the
 decoding process.
 </p><!-- l. 22 --><p class='indent'>   In its simplest form, a motion compensated transform inputs one (or more)
@@ -39,7 +39,7 @@ has been significantly decreased compared to the case in which the motion is not
 compensated.
 </p><!-- l. 104 --><p class='noindent'>
 </p>
-   <h3 class='sectionHead' id='blockbased-motion-estimation-raotechniques'><span class='titlemark'>2   </span> <a id='x1-20002'></a>Block-based motion estimation <span class='cite'>[<a href='#Xrao1996techniques'>5</a>]</span></h3>
+   <h3 class='sectionHead' id='blockbased-motion-estimation-raotechniques'><span class='titlemark'>2   </span> <a id='x1-20002'></a>Block-based motion estimation <span class='cite'>[<a href='#Xrao1996techniques'>6</a>]</span></h3>
    <figure class='figure'> 
 
                                                                   
@@ -61,7 +61,7 @@ the block \((x,y)\) of \(\mathbf P\) is found in \(\mathbf R\).                 
 16x16 pixels<span class='footnote-mark'><a href='#fn1x0' id='fn1x0-bk'><sup class='textsuperscript'>1</sup></a></span><a id='x1-2003f1'></a>,
 and we can use the (R)MSE that measures the distance in L\(_2\) (also known as the
 Euclidean distance) between each block of \(\mathbf P\) and its surrounding pixels in \(\mathbf R\) (the so
-called search area) <span class='cite'>[<a href='#Xzhu2000new'>6</a>]</span>. For each block, a motion vector that indicates the best match
+called search area) <span class='cite'>[<a href='#Xzhu2000new'>7</a>]</span>. For each block, a motion vector that indicates the best match
 (smaller distance) is found. The set of motion vectors form the motion vectors field \(\overset {{\mathbf R}\rightarrow {\mathbf P}}{\mathbf M}\)
 that obviously, except for a block size of 1x1, will be less dense than \(\mathbf R\) and \(\mathbf P\).
 Notice, however, that, it is not a good idea to use such a small block size
@@ -92,7 +92,7 @@ the compression ratio.
                                                                   
    </figure>
 <!-- l. 153 --><p class='indent'>   A better approximation to the OF for small block sizes can be found if we allow
-the blocks to overlap in \(\mathbf P\) <span class='cite'>[<a href='#Xorchard1994overlapped'>4</a>]</span>, case in which the block size for performing the
+the blocks to overlap in \(\mathbf P\) <span class='cite'>[<a href='#Xorchard1994overlapped'>5</a>]</span>, case in which the block size for performing the
 comparisons must be larger. Again, as it happens with the disjoint case, only the non
 overlaped pixels are used for building the prediction (see the Fig. <a href='#x1-3001r2'>2<!-- tex4ht:ref: fig:overlaped  --></a>). Obviously, the
 main drawback of this technique is that it can be more computationally demanding
@@ -215,7 +215,7 @@ in two consecutive images is similar.
 </p><!-- l. 292 --><p class='noindent'>
 </p>
    <h4 class='subsectionHead' id='optical-flow'><span class='titlemark'>5.4   </span> <a id='x1-100005.4'></a>Optical flow</h4>
-<!-- l. 313 --><p class='noindent'>The Optical Flow (OF) <span class='cite'>[<a href='#Xhorn1981determining'>3</a>]</span> describes the aparent motion of the pixels in the scene
+<!-- l. 313 --><p class='noindent'>The Optical Flow (OF) <span class='cite'>[<a href='#Xhorn1981determining'>4</a>]</span> describes the aparent motion of the pixels in the scene
 between two frames. There are several OF estimators proposed in the literature, and
 one of the most used is the Farnebäck’s algorithm <span class='cite'>[<a href='#Xfarneback2003two'>2</a>]</span>, which instead of comparing
 pixels in the image domain, compares the coefficients generated by the transform
@@ -297,25 +297,28 @@ encoder.
    Springer, 2003.
    </p>
    <p class='bibitem'><span class='biblabel'>
- [3]<span class='bibsp'>   </span></span><a id='Xhorn1981determining'></a>B.K.P.  Horn  and  B.G.  Schunck.    <a href='https://www.caam.rice.edu/~zhang/caam699/opt-flow/horn81.pdf'>Determining  Optical  Flow</a>.    In
+ [3]<span class='bibsp'>   </span></span><a id='Xvruiz__MCTF'></a>V. González-Ruiz. <a href='https://github.com/vicente-gonzalez-ruiz/motion_compensated_temporal_filtering'>Motion Compensated Temporal Filtering (MCTF)</a>.
+   </p>
+   <p class='bibitem'><span class='biblabel'>
+ [4]<span class='bibsp'>   </span></span><a id='Xhorn1981determining'></a>B.K.P.  Horn  and  B.G.  Schunck.    <a href='https://www.caam.rice.edu/~zhang/caam699/opt-flow/horn81.pdf'>Determining  Optical  Flow</a>.    In
    <span class='ecti-1000'>Techniques and Applications of Image Understanding</span>, volume 281, pages
    319–331. International Society for Optics and Photonics, 1981.
    </p>
    <p class='bibitem'><span class='biblabel'>
- [4]<span class='bibsp'>   </span></span><a id='Xorchard1994overlapped'></a>M.T.   Orchard   and   G.J.   Sullivan.       <a href='https://www.semanticscholar.org/paper/Overlapped-block-motion-compensation%3A-an-approach-Orchard-Sullivan/8f46f291825caa786890ef224a28cf513f049799'>Overlapped   Block   Motion
+ [5]<span class='bibsp'>   </span></span><a id='Xorchard1994overlapped'></a>M.T.   Orchard   and   G.J.   Sullivan.       <a href='https://www.semanticscholar.org/paper/Overlapped-block-motion-compensation%3A-an-approach-Orchard-Sullivan/8f46f291825caa786890ef224a28cf513f049799'>Overlapped   Block   Motion
    Compensation: An Estimation-Theoretic Approach</a>. <span class='ecti-1000'>IEEE Transactions on
    </span><span class='ecti-1000'>Image Processing</span>, 3(5):693–699, 1994.
-   </p>
-   <p class='bibitem'><span class='biblabel'>
- [5]<span class='bibsp'>   </span></span><a id='Xrao1996techniques'></a>Kamisetty Ramamohan Rao and Jae Jeong Hwang.   <a href='https://scholar.google.es/scholar?hl=es&amp;as_sdt=0%2C5&amp;q=Techniques+and+Standards+for+Image%2C+Video+and+Audio+Coding&amp;btnG='><span class='ecti-1000'>Techniques and
-   </span><span class='ecti-1000'>standards for image, video, and audio coding</span></a>, volume 70. Prentice Hall New
-   Jersey, 1996.
                                                                   
 
                                                                   
    </p>
    <p class='bibitem'><span class='biblabel'>
- [6]<span class='bibsp'>   </span></span><a id='Xzhu2000new'></a>S. Zhu  and  K.-K.  Ma.     <a href='https://www.cl.cam.ac.uk/teaching/1718/SysOnChip/materials.d/mpeg-diamond-search-motion-esimation-zhu-ma-2000.pdf'>A  New  Diamond  Search  Algorithm  for
+ [6]<span class='bibsp'>   </span></span><a id='Xrao1996techniques'></a>Kamisetty Ramamohan Rao and Jae Jeong Hwang.   <a href='https://scholar.google.es/scholar?hl=es&amp;as_sdt=0%2C5&amp;q=Techniques+and+Standards+for+Image%2C+Video+and+Audio+Coding&amp;btnG='><span class='ecti-1000'>Techniques and
+   </span><span class='ecti-1000'>standards for image, video, and audio coding</span></a>, volume 70. Prentice Hall New
+   Jersey, 1996.
+   </p>
+   <p class='bibitem'><span class='biblabel'>
+ [7]<span class='bibsp'>   </span></span><a id='Xzhu2000new'></a>S. Zhu  and  K.-K.  Ma.     <a href='https://www.cl.cam.ac.uk/teaching/1718/SysOnChip/materials.d/mpeg-diamond-search-motion-esimation-zhu-ma-2000.pdf'>A  New  Diamond  Search  Algorithm  for
    Fast  Block-Matching  Motion  Estimation</a>.   <span class='ecti-1000'>IEEE  transactions  on  Image
    </span><span class='ecti-1000'>Processing</span>, 9(2):287–290, 2000.
 </p>
