@@ -46,19 +46,20 @@ print("OFCA: default poly_n", POLY_N)
 print("OFCA: default poly_sigma", POLY_SIGMA)
 
 def Farneback_ME(predicted:np.ndarray,
-             reference:np.ndarray,
-             initial_MVs:np.ndarray=None,
-             levels:int=OF_LEVELS,
-             wside:int=OF_WINDOW_SIDE,
-             iters:int=OF_ITERS,
-             poly_n:float=POLY_N,
-             poly_sigma:float=POLY_SIGMA) -> np.ndarray:
-    logger.info(f"estimate: levels={levels} wside={wside} iters={iters} poly_n={poly_n} poly_sigma={poly_sigma}")
+                 reference:np.ndarray,
+                 initial_MVs:np.ndarray=None,
+                 pyr_scale=0.5,
+                 levels:int=OF_LEVELS,
+                 wside:int=OF_WINDOW_SIDE,
+                 iters:int=OF_ITERS,
+                 poly_n:float=POLY_N,
+                 poly_sigma:float=POLY_SIGMA) -> np.ndarray:
+    logger.info(f"estimate: pyr_scale={pyr_scale} levels={levels} wside={wside} iters={iters} poly_n={poly_n} poly_sigma={poly_sigma}")
     MVs = cv2.calcOpticalFlowFarneback(
         prev=predicted,
         next=reference,
         flow=initial_MVs,
-        pyr_scale=0.5,
+        pyr_scale=pyr_scale,
         levels=levels,
         winsize=wside,
         iterations=iters,
