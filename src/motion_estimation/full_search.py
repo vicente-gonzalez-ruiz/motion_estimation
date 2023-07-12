@@ -1,5 +1,7 @@
 '''Full-search motion-estimation.'''
 
+# Este código no está completo (mirar en los notebooks)
+
 import cv2
 import numpy as np
 

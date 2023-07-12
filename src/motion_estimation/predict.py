@@ -1,6 +1,7 @@
+''' motion_estimation/predict.py '''
+
 import cv2
 import numpy as np
-
 
 # Signal extension mode used in the OFCA. See https://docs.opencv.org/3.4/d2/de8/group__core__array.html
 #ofca_extension_mode = cv2.BORDER_CONSTANT
