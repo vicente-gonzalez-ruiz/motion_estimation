@@ -1,4 +1,4 @@
-'''Full-search motion-estimation.'''
+''' motion_estimation/full_search.py '''
 
 # Este código no está completo (mirar en los notebooks)
 
