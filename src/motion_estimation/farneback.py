@@ -39,12 +39,12 @@ def get_flow(
         prev=target,
         next=reference,
         flow=prev_flow,
-        pyr_scale,
-        levels,
-        winsize,
-        iterations,
-        poly_n,
-        poly_sigma,
-        flags)
+        pyr_scale=pyr_scale,
+        levels=levels,
+        winsize=winsize,
+        iterations=iterations,
+        poly_n=poly_n,
+        poly_sigma=poly_sigma,
+        flags=flags)
     #flow = cv2.calcOpticalFlowFarneback(target, reference, flow=prev_flow, pyr_scale, levels, winsize, iterations, poly_n, poly_sigma, flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN)
     return flow
