@@ -33,7 +33,7 @@ def get_flow(
         poly_n:float=POLY_N,
         poly_sigma:float=POLY_SIGMA,
         flags=cv2.OPTFLOW_USE_INITIAL_FLOW |  cv2.OPTFLOW_FARNEBACK_GAUSSIAN):
-    logger.info(f"pyr_scale={pyr_scale} levels={levels} winsize={winsize} iterations={iters} poly_n={poly_n} poly_sigma={poly_sigma}")
+    logger.info(f"pyr_scale={pyr_scale} levels={levels} winsize={winsize} iterations={iterations} poly_n={poly_n} poly_sigma={poly_sigma}")
     # projection(next, flow) ~ prev
     flow = cv2.calcOpticalFlowFarneback(
         prev=target,
