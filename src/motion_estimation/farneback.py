@@ -31,8 +31,8 @@ class Estimator_in_CPU():
             poly_n=POLY_N,
             poly_sigma=POLY_SIGMA,
             flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN):
-        logger.info(f"pyr_scale={pyr_scale} levels={levels} winsize={win_side} iterations={iterations} poly_n={poly_n} poly_sigma={poly_sigma} flags={flags}")
-        self.pry_scale = pyr_scale
+        logger.info(f"pyr_scale={pyr_scale} levels={levels} winsize={win_side} iterations={iters} poly_n={poly_n} poly_sigma={poly_sigma} flags={flags}")
+        self.pyr_scale = pyr_scale
         self.levels = levels
         self.win_side = win_side
         self.iters = iters
@@ -61,7 +61,7 @@ class Estimator_in_CPU():
             pyr_scale=self.pyr_scale,
             levels=self.levels,
             winsize=self.win_side,
-            iterations=self.iter,
+            iterations=self.iters,
             poly_n=self.poly_n,
             poly_sigma=self.poly_sigma,
             flags=self.flags)
