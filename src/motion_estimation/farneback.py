@@ -24,7 +24,7 @@ class Estimator_in_CPU():
     
     def __init__(self,
             levels=LEVELS,
-            pyr_scale=PRY_SCALE,
+            pyr_scale=PYR_SCALE,
             fast_pyramids=False,
             win_side=WINDOW_SIDE,
             iters=ITERS,
@@ -77,7 +77,7 @@ class Estimator_in_GPU(Estimator_in_CPU):
 
     def __init__(self,
             levels=LEVELS,
-            pyr_scale=PRY_SCALE,
+            pyr_scale=PYR_SCALE,
             fast_pyramids=False,
             win_side=WINDOW_SIDE,
             iters=ITERS,
