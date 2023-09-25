@@ -22,5 +22,10 @@ def warp(
     map_x = np.tile(np.arange(width), (height, 1))
     map_y = np.swapaxes(np.tile(np.arange(height), (width, 1)), 0, 1)
     map_xy = (flow + np.dstack((map_x, map_y))).astype('float32')
-    warped_reference = cv2.remap(reference, map_xy, None, interpolation=interpolation_mode, borderMode=extension_mode)
+    warped_reference = cv2.remap(
+        reference,
+        map_xy,
+        None,
+        interpolation=interpolation_mode,
+        borderMode=extension_mode)
     return warped_reference
