@@ -17,7 +17,9 @@ def warp(
         flow,
         interpolation_mode=cv2.INTER_LINEAR,
         extension_mode=cv2.BORDER_REPLICATE):
+    
     logger.info(f"reference.shape={reference.shape}")
+    
     height, width = flow.shape[:2]
     map_x = np.tile(np.arange(width), (height, 1))
     map_y = np.swapaxes(np.tile(np.arange(height), (width, 1)), 0, 1)
@@ -28,4 +30,5 @@ def warp(
         None,
         interpolation=interpolation_mode,
         borderMode=extension_mode)
+    
     return warped_reference
