@@ -116,7 +116,10 @@ class Estimator_in_GPU(Estimator_in_CPU):
             reference,
             prev_flow):
         '''The returned flow express the positions of the pixels of target in
-respect of the pixels of reference.'''
+respect of the pixels of reference. In other words, if we project
+target using the flow, get should get reference.
+
+        '''
         
         if logger.getEffectiveLevel() <= logging.INFO:
             time_0 = time.perf_counter()
