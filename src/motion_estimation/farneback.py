@@ -110,11 +110,13 @@ class Estimator_in_GPU(Estimator_in_CPU):
 
     def get_times(self):
         return self.running_time, self.transference_time
-    
+
     def get_flow(selff,
             target,
             reference,
             prev_flow):
+        '''The returned flow express the positions of the pixels of target in
+respect of the pixels of reference.'''
         
         if logger.getEffectiveLevel() <= logging.INFO:
             time_0 = time.perf_counter()
