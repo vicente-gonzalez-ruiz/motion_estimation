@@ -71,6 +71,8 @@ class Estimator_in_CPU():
             last_running_time = time_1 - time_0
             self.total_running_time += last_running_time
 
+        logger.debug(f"avg_OF={np.average(np.abs(flow)):4.2f}")
+
         return flow
 
 class Estimator_in_GPU(Estimator_in_CPU):
@@ -150,5 +152,7 @@ class Estimator_in_GPU(Estimator_in_CPU):
         if logger.getEffectiveLevel() <= logging.INFO:
             last_transference_time += (time.perf_counter() - time_0)
             self.transference_time += self.last_transference_time
+
+        logger.debug(f"avg_OF={np.average(np.abs(flow)):4.2f}")
 
         return flow
