@@ -12,8 +12,8 @@ logger.setLevel(logging.WARNING)
 import cv2
 import numpy as np
 
-def warp(
-        reference,
+def project(
+        image,
         flow,
         interpolation_mode=cv2.INTER_LINEAR,
         extension_mode=cv2.BORDER_REPLICATE):
@@ -24,11 +24,11 @@ def warp(
     map_x = np.tile(np.arange(width), (height, 1))
     map_y = np.swapaxes(np.tile(np.arange(height), (width, 1)), 0, 1)
     map_xy = (flow + np.dstack((map_x, map_y))).astype('float32')
-    warped_reference = cv2.remap(
-        reference,
+    projection = cv2.remap(
+        image,
         map_xy,
         None,
         interpolation=interpolation_mode,
         borderMode=extension_mode)
     
-    return warped_reference
+    return projection
