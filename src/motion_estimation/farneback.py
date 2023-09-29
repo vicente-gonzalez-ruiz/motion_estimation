@@ -17,7 +17,6 @@ WINDOW_SIDE = 5
 ITERS = 5
 POLY_N = 5
 POLY_SIGMA = 1.2
-SIGMA = 2.0
 PYR_SCALE = 0.5
 
 class Estimator_in_CPU():
