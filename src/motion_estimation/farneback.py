@@ -1,4 +1,5 @@
-''' motion_estimation/farneback.py '''
+'''motion_estimation/farneback.py. See
+https://docs.opencv.org/3.4/dc/d6b/group__video__track.html#ga5d10ebbd59fe09c5f650289ec0ece5af'''
 
 import logging
 logger = logging.getLogger(__name__)
@@ -22,13 +23,13 @@ PYR_SCALE = 0.5
 class Estimator_in_CPU():
     
     def __init__(self,
-            levels=LEVELS,
-            pyr_scale=PYR_SCALE,
-            fast_pyramids=False,
-            win_side=WINDOW_SIDE,
-            iters=ITERS,
-            poly_n=POLY_N,
-            poly_sigma=POLY_SIGMA,
+            levels=LEVELS, # Number of pyramid layers
+            pyr_scale=PYR_SCALE, # Pyramid slope
+            fast_pyramids=False, # CUDA specific
+            win_side=WINDOW_SIDE, # Applicability window side
+            iters=ITERS, # Number of iterations at each pyramid level
+            poly_n=POLY_N, # Size of the pixel neighborhood used to find the polynomial expansion in each pixel
+            poly_sigma=POLY_SIGMA, # Standard deviation of the Gaussian basis used in the polynomial expansion
             flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN):
         logger.info(f"pyr_scale={pyr_scale} levels={levels} winsize={win_side} iterations={iters} poly_n={poly_n} poly_sigma={poly_sigma} flags={flags}")
         self.pyr_scale = pyr_scale
