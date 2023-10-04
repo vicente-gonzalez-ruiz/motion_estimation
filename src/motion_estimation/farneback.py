@@ -24,13 +24,14 @@ class Estimator_in_CPU():
     
     def __init__(self,
             levels=LEVELS, # Number of pyramid layers
-            pyr_scale=PYR_SCALE, # Pyramid slope
+            pyr_scale=PYR_SCALE, # Pyramid slope. Multiply by 2^levels the searching area if the OFE
             fast_pyramids=False, # CUDA specific
             win_side=WINDOW_SIDE, # Applicability window side
             iters=ITERS, # Number of iterations at each pyramid level
             poly_n=POLY_N, # Size of the pixel neighborhood used to find the polynomial expansion in each pixel
             poly_sigma=POLY_SIGMA, # Standard deviation of the Gaussian basis used in the polynomial expansion
             flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN):
+        
         logger.info(f"pyr_scale={pyr_scale} levels={levels} winsize={win_side} iterations={iters} poly_n={poly_n} poly_sigma={poly_sigma} flags={flags}")
         self.pyr_scale = pyr_scale
         self.levels = levels
