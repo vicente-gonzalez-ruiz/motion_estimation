@@ -266,5 +266,5 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
     
         #xw = d + np.moveaxis(np.indices(target.shape), 0, -1)
         #return xw
-        return d
+        return d[..., [1, 0]] # (x, y) notation
 
