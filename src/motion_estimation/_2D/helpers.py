@@ -49,3 +49,6 @@ def project(
     
     return projection
 
+def add_coordinates(flow, target):
+    return flow + np.moveaxis(np.indices(target.shape), 0, -1)
+

@@ -1,6 +1,9 @@
 '''Farneback's optical flow algorithm (2D). See https://github.com/ericPrince/optical-flow'''
 
 import numpy as np
+import scipy
+from functools import partial
+import skimage.transform
 import logging
 #logger = logging.getLogger(__name__)
 logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
@@ -9,8 +12,7 @@ logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s
 #logger.setLevel(logging.WARNING)
 #logger.setLevel(logging.INFO)
 #logger.setLevel(logging.DEBUG)
-import polinomial_expansion
-import scipy
+from . import polinomial_expansion
 
 class Farneback(polinomial_expansion.Polinomial_Expansion):
 
@@ -19,7 +21,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         self.logger.setLevel(verbosity)
         super().__init__()
 
-    def estimate_2d(self,
+    def iteration_estimate(self,
         f1, f2, sigma, c1, c2, sigma_flow, num_iter=1, d=None, model="constant", mu=None
     ):
         """
@@ -68,11 +70,6 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
             np.broadcast_arrays(np.arange(f1.shape[0])[:, None], np.arange(f1.shape[1])),
             axis=-1,
         ).astype(int)
-        print(f1.shape)
-        print(np.arange(f1.shape[0]))
-        print(np.arange(f1.shape[0])[:, None])
-        print(np.broadcast_arrays(np.arange(f1.shape[0])[:, None], np.arange(f1.shape[1])))
-        print(x)
     
         # Initialize displacement field
         if d is None:
@@ -138,7 +135,6 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
     
             # Calculate A and delB for each point, according to paper
             A = (A1 + A2[x_[..., 0], x_[..., 1]]) / 2
-            print(A1, A2[x_[..., 0], x_[..., 1]])
     
             A *= c_[
                 ..., None, None
@@ -196,3 +192,79 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         # TODO: return global displacement parameters and/or global displacement if mu != 0
     
         return d
+
+    def get_flow(self, target, reference, prev_flow=None): # target and reference double's
+        # certainties for images - certainty is decreased for pixels near the edge
+        # of the image, as recommended by Farneback
+    
+        # c1 = np.ones_like(target)
+        # c2 = np.ones_like(reference)
+    
+        c1 = np.minimum(
+            1, 1 / 5 * np.minimum(np.arange(target.shape[0])[:, None], np.arange(target.shape[1]))
+        )
+        c1 = np.minimum(
+            c1,
+            1
+            / 5
+            * np.minimum(
+                target.shape[0] - 1 - np.arange(target.shape[0])[:, None],
+                target.shape[1] - 1 - np.arange(target.shape[1]),
+            ),
+        )
+        c2 = c1
+    
+        # ---------------------------------------------------------------
+        # calculate optical flow with this algorithm
+        # ---------------------------------------------------------------
+    
+        n_pyr = 4
+    
+        # # version using perspective warp regularization
+        # # to clean edges
+        # opts = dict(
+        #     sigma=4.0,
+        #     sigma_flow=4.0,
+        #     num_iter=3,
+        #     model='eight_param',
+        #     mu=None,
+        # )
+    
+        # version using no regularization model
+        opts = dict(
+            sigma=4.0,
+            sigma_flow=4.0,
+            num_iter=3,
+            model="constant",
+            mu=0,
+        )
+    
+        # optical flow field
+        d = prev_flow
+    
+        # calculate optical flow using pyramids
+        # note: reversed(...) because we start with the smallest pyramid
+        for pyr1, pyr2, c1_, c2_ in reversed(
+            list(
+                zip(
+                    *list(
+                        map(
+                            partial(skimage.transform.pyramid_gaussian, max_layer=n_pyr),
+                            [target, reference, c1, c2],
+                        )
+                    )
+                )
+            )
+        ):
+            if d is not None:
+                # TODO: account for shapes not quite matching
+                #d = skimage.transform.pyramid_expand(d, multichannel=True)
+                d = skimage.transform.pyramid_expand(d, channel_axis=2)
+                d = d[: pyr1.shape[0], : pyr2.shape[1]]
+    
+            d = self.iteration_estimate(pyr1, pyr2, c1=c1_, c2=c2_, d=d, **opts)
+    
+        #xw = d + np.moveaxis(np.indices(target.shape), 0, -1)
+        #return xw
+        return d
+
