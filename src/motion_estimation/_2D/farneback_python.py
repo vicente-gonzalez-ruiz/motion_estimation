@@ -21,11 +21,11 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         self.logger.setLevel(verbosity)
         super().__init__()
 
-    def iteration_estimate(self,
-        f1, f2, sigma, c1, c2, sigma_flow, num_iter=1, d=None, model="constant", mu=None
+    def get_flow(self,
+        f1, f2, sigma, c1, c2, sigma_flow, num_iter=1, flow=None, model="constant", mu=None
     ):
         """
-        Calculates optical flow with an algorithm described by Gunnar Farneback
+        Calculates optical flow using only one level of the algorithm described by Gunnar Farneback
     
         Parameters
         ----------
@@ -43,7 +43,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
             Applicability window Gaussian kernel sigma for polynomial matching
         num_iter
             Number of iterations to run (defaults to 1)
-        d: (optional)
+        flow: (optional)
             Initial displacement field
         p: (optional)
             Initial global displacement model parameters
@@ -55,7 +55,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
     
         Returns
         -------
-        d
+        flow
             Optical flow field. d[i, j] is the (y, x) displacement for pixel (i, j)
         """
     
@@ -72,8 +72,8 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         ).astype(int)
     
         # Initialize displacement field
-        if d is None:
-            d = np.zeros(list(f1.shape) + [2])
+        if flow is None:
+            flow = np.zeros(list(f1.shape) + [2])
     
         # Set up applicability convolution window
         n_flow = int(4 * sigma_flow + 1)
@@ -115,11 +115,11 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
     
         # Iterate convolutions to estimate the optical flow
         for _ in range(num_iter):
-            # Set d~ as displacement field fit to nearest pixel (and constrain to not
+            # Set flow~ as displacement field fit to nearest pixel (and constrain to not
             # being off image). Note we are setting certainty to 0 for points that
             # would have been off-image had we not constrained them
-            d_ = d.astype(int)
-            x_ = x + d_
+            flow_ = flow.astype(int)
+            x_ = x + flow_
     
             # x_ = np.maximum(np.minimum(x_, np.array(f1.shape) - 1), 0)
     
@@ -140,7 +140,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
                 ..., None, None
             ]  # recommendation in paper: add in certainty by applying to A and delB
     
-            delB = -1 / 2 * (B2[x_[..., 0], x_[..., 1]] - B1) + (A @ d_[..., None])[..., 0]
+            delB = -1 / 2 * (B2[x_[..., 0], x_[..., 1]] - B1) + (A @ flow_[..., None])[..., 0]
             delB *= c_[
                 ..., None
             ]  # recommendation in paper: add in certainty by applying to A and delB
@@ -162,7 +162,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
                 h = scipy.ndimage.correlate1d(ATb, w, axis=0, mode="constant", cval=0)
                 h = scipy.ndimage.correlate1d(h, w, axis=1, mode="constant", cval=0)
     
-                d = (S @ np.linalg.solve(G, h)[..., None])[..., 0]
+                flow = (S @ np.linalg.solve(G, h)[..., None])[..., 0]
     
             # if mu is not 0, it should be used to regularize the least squares problem
             # and "force" the background warp onto uncertain pixels
@@ -171,7 +171,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
                 G_avg = np.mean(ATA, axis=(0, 1))
                 h_avg = np.mean(ATb, axis=(0, 1))
                 p_avg = np.linalg.solve(G_avg, h_avg)
-                d_avg = (S @ p_avg[..., None])[..., 0]
+                flow_avg = (S @ p_avg[..., None])[..., 0]
     
                 # Default value for mu is to set mu to 1/2 the trace of G_avg
                 if mu is None:
@@ -187,19 +187,18 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
                 h = scipy.ndimage.correlate1d(h, w, axis=1, mode="constant", cval=0)
     
                 # Refine estimate of displacement field
-                d = np.linalg.solve(G + mu * np.eye(2), h + mu * d_avg)
+                flow = np.linalg.solve(G + mu * np.eye(2), h + mu * flow_avg)
     
         # TODO: return global displacement parameters and/or global displacement if mu != 0
     
-        return d
+        return flow
 
-    def get_flow(self, target, reference, prev_flow=None): # target and reference double's
-        # certainties for images - certainty is decreased for pixels near the edge
-        # of the image, as recommended by Farneback
-    
+    def pyramid_get_flow(self, target, reference, flow=None, levels=3): # target and reference double's
         # c1 = np.ones_like(target)
         # c2 = np.ones_like(reference)
     
+        # certainties for images - certainty is decreased for pixels near the edge
+        # of the image, as recommended by Farneback
         c1 = np.minimum(
             1, 1 / 5 * np.minimum(np.arange(target.shape[0])[:, None], np.arange(target.shape[1]))
         )
@@ -218,9 +217,9 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         # calculate optical flow with this algorithm
         # ---------------------------------------------------------------
     
-        n_pyr = 4
+        #n_pyr = 4
     
-        # # version using perspective warp regularization
+        # # Configuration using perspective warp regularization
         # # to clean edges
         # opts = dict(
         #     sigma=4.0,
@@ -230,7 +229,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         #     mu=None,
         # )
     
-        # version using no regularization model
+        # Configuration using no regularization model
         opts = dict(
             sigma=4.0,
             sigma_flow=4.0,
@@ -240,7 +239,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         )
     
         # optical flow field
-        d = prev_flow
+        #d = prev_flow
     
         # calculate optical flow using pyramids
         # note: reversed(...) because we start with the smallest pyramid
@@ -249,22 +248,22 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
                 zip(
                     *list(
                         map(
-                            partial(skimage.transform.pyramid_gaussian, max_layer=n_pyr),
+                            partial(skimage.transform.pyramid_gaussian, max_layer=levels),
                             [target, reference, c1, c2],
                         )
                     )
                 )
             )
         ):
-            if d is not None:
+            if flow is not None:
                 # TODO: account for shapes not quite matching
                 #d = skimage.transform.pyramid_expand(d, multichannel=True)
-                d = skimage.transform.pyramid_expand(d, channel_axis=2)
-                d = d[: pyr1.shape[0], : pyr2.shape[1]]
+                flow = skimage.transform.pyramid_expand(flow, channel_axis=2)
+                flow = flow[: pyr1.shape[0], : pyr2.shape[1]]
     
-            d = self.iteration_estimate(pyr1, pyr2, c1=c1_, c2=c2_, d=d, **opts)
+            flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, **opts)
     
         #xw = d + np.moveaxis(np.indices(target.shape), 0, -1)
         #return xw
-        return d[..., [1, 0]] # (x, y) notation
+        return flow[..., [1, 0]] # (x, y) notation
 
