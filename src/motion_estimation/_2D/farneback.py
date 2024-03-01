@@ -85,7 +85,7 @@ class Estimator_in_GPU(Estimator_in_CPU):
             win_side=WINDOW_SIDE,
             iters=ITERS,
             poly_n=POLY_N,
-            polysigma=POLY_SIGMA,
+            poly_sigma=POLY_SIGMA,
             flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN):
         super().__init(levels,
                        pyr_scale,

@@ -22,7 +22,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         super().__init__()
 
     def get_flow(self,
-        f1, f2, sigma, c1, c2, sigma_flow, num_iter=1, flow=None, model="constant", mu=None
+        f1, f2, sigma_poly, c1, c2, sigma_flow, num_iters=3, flow=None, model="constant", mu=None
     ):
         """
         Calculates optical flow using only one level of the algorithm described by Gunnar Farneback
@@ -33,7 +33,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
             First image
         f2
             Second image
-        sigma
+        sigma_poly
             Polynomial expansion applicability Gaussian kernel sigma
         c1
             Certainty of first image
@@ -41,7 +41,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
             Certainty of second image
         sigma_flow
             Applicability window Gaussian kernel sigma for polynomial matching
-        num_iter
+        num_iters
             Number of iterations to run (defaults to 1)
         flow: (optional)
             Initial displacement field
@@ -62,8 +62,8 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         # TODO: add initial warp parameters as optional input?
     
         # Calculate the polynomial expansion at each point in the images
-        A1, B1, C1 = self.poly_expand(f1, c1, sigma)
-        A2, B2, C2 = self.poly_expand(f2, c2, sigma)
+        A1, B1, C1 = self.poly_expand(f1, c1, sigma_poly)
+        A2, B2, C2 = self.poly_expand(f2, c2, sigma_poly)
     
         # Pixel coordinates of each point in the images
         x = np.stack(
@@ -114,7 +114,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         S_T = S.swapaxes(-1, -2)
     
         # Iterate convolutions to estimate the optical flow
-        for _ in range(num_iter):
+        for _ in range(num_iters):
             # Set flow~ as displacement field fit to nearest pixel (and constrain to not
             # being off image). Note we are setting certainty to 0 for points that
             # would have been off-image had we not constrained them
@@ -193,7 +193,9 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
     
         return flow
 
-    def pyramid_get_flow(self, target, reference, flow=None, levels=3): # target and reference double's
+    def pyramid_get_flow(self, target, reference, flow=None, pyr_levels=3, sigma_poly=4.0, sigma_flow=4.0, num_iters=3): # target and reference double's
+        self.logger.info(f"pyr_levels={pyr_levels}")
+        self.logger.info(f"sigma_poly={sigma_poly}")
         # c1 = np.ones_like(target)
         # c2 = np.ones_like(reference)
     
@@ -222,18 +224,18 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         # # Configuration using perspective warp regularization
         # # to clean edges
         # opts = dict(
-        #     sigma=4.0,
+        #     sigma_poly=4.0,
         #     sigma_flow=4.0,
         #     num_iter=3,
         #     model='eight_param',
         #     mu=None,
         # )
-    
+
         # Configuration using no regularization model
         opts = dict(
-            sigma=4.0,
-            sigma_flow=4.0,
-            num_iter=3,
+            #sigma_poly=4.0,
+            #sigma_flow=4.0,
+            #num_iter=3,
             model="constant",
             mu=0,
         )
@@ -248,7 +250,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
                 zip(
                     *list(
                         map(
-                            partial(skimage.transform.pyramid_gaussian, max_layer=levels),
+                            partial(skimage.transform.pyramid_gaussian, max_layer=pyr_levels),
                             [target, reference, c1, c2],
                         )
                     )
@@ -261,7 +263,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
                 flow = skimage.transform.pyramid_expand(flow, channel_axis=2)
                 flow = flow[: pyr1.shape[0], : pyr2.shape[1]]
     
-            flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, **opts)
+            flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=sigma_poly, sigma_flow=sigma_flow, num_iters=num_iters, **opts)
     
         #xw = d + np.moveaxis(np.indices(target.shape), 0, -1)
         #return xw
