@@ -56,8 +56,13 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         Returns
         -------
         flow
-            Optical flow field. d[i, j] is the (y, x) displacement for pixel (i, j)
+            Optical flow field. flow[i, j] is the (y, x) displacement for pixel (i, j)
         """
+        self.logger.info(f"sigma_poly={sigma_poly}")
+        self.logger.info(f"sigma_flow={sigma_flow}")
+        self.logger.info(f"num_iters={num_iters}")
+        self.logger.info(f"model={model}")
+        self.logger.info(f"mu={mu}")
     
         # TODO: add initial warp parameters as optional input?
     
@@ -134,7 +139,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
             c_[off_f] = 0
     
             # Calculate A and delB for each point, according to paper
-            A = (A1 + A2[x_[..., 0], x_[..., 1]]) / 2
+            A = (A1 + A2[x_[..., 0], x_[..., 1]]) / 2  # Eq. 7.12 (see also Fig. 7.8)
     
             A *= c_[
                 ..., None, None
@@ -147,8 +152,8 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
     
             # Pre-calculate quantities recommended by paper
             A_T = A.swapaxes(-1, -2)
-            ATA = S_T @ A_T @ A @ S
-            ATb = (S_T @ A_T @ delB[..., None])[..., 0]
+            ATA = S_T @ A_T @ A @ S # G(x) in the thesis (see Fig. 7.8)
+            ATb = (S_T @ A_T @ delB[..., None])[..., 0] # h(x) in the thesis (see Fig. 7.8)
             # btb = delB.swapaxes(-1, -2) @ delB
     
             # If mu is 0, it means the global/average parametrized warp should not be
@@ -196,6 +201,8 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
     def pyramid_get_flow(self, target, reference, flow=None, pyr_levels=3, sigma_poly=4.0, sigma_flow=4.0, num_iters=3): # target and reference double's
         self.logger.info(f"pyr_levels={pyr_levels}")
         self.logger.info(f"sigma_poly={sigma_poly}")
+        self.logger.info(f"sigma_flow={sigma_flow}")
+        self.logger.info(f"num_iters={num_iters}")
         # c1 = np.ones_like(target)
         # c2 = np.ones_like(reference)
     

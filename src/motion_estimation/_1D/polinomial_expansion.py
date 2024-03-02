@@ -11,7 +11,7 @@ logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s
 #logger.setLevel(logging.DEBUG)
 import scipy
 
-class Expander():
+class Polinomial_Expansion():
 
     def __init__(self, verbosity=logging.INFO):
         self.logger = logging.getLogger(__name__)
