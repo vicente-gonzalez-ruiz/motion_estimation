@@ -13,16 +13,17 @@ logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s
 #logger.setLevel(logging.INFO)
 #logger.setLevel(logging.DEBUG)
 from . import polinomial_expansion
+from . import pyramid_gaussian
 
 class Farneback(polinomial_expansion.Polinomial_Expansion):
 
     def __init__(self, verbosity=logging.INFO):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(verbosity)
-        super().__init__()
+        super().__init__(verbosity)
 
     def get_flow(self,
-        f1, f2, sigma_poly, c1, c2, sigma_flow, num_iters=3, flow=None, model="constant", mu=None
+        f1, f2, c1, c2, sigma_poly=4.0, sigma_flow=4.0, num_iters=3, flow=None, model="constant", mu=None
     ):
         """
         Calculates optical flow using only one level of the algorithm described by Gunnar Farneback
@@ -58,23 +59,31 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         flow
             Optical flow field. flow[i] is the x displacement for sample i
         """
-        self.logger.info(f"sigma_poly={sigma_poly}")
-        self.logger.info(f"sigma_flow={sigma_flow}")
-        self.logger.info(f"num_iters={num_iters}")
-        self.logger.info(f"model={model}")
-        self.logger.info(f"mu={mu}")
+        self.logger.debug(f"sigma_poly={sigma_poly}")
+        self.logger.debug(f"sigma_flow={sigma_flow}")
+        self.logger.debug(f"num_iters={num_iters}")
+        self.logger.debug(f"model={model}")
+        self.logger.debug(f"mu={mu}")
         self.logger.info(f"shape={f1.shape}")
+        print("f1", np.max(f1))
+        print("f2", np.max(f2))
+        print("c1", np.max(c1))
+        print("c2", np.max(c2))
+        print("f1.dtype", f1.dtype)
+        print("f2.dtype", f2.dtype)
+        print("c1.dtype", c1.dtype)
+        print("c2.dtype", c2.dtype)
 
         # TODO: add initial warp parameters as optional input?
-    
+
         # Calculate the polynomial expansion at each sample in the signals
         A1, B1, C1 = self.poly_expand(f1, c1, sigma_poly)
         A2, B2, C2 = self.poly_expand(f2, c2, sigma_poly)
-    
+
         # Sample indexes in the signals
         x = np.arange(f1.shape[0])[:, None].astype(int)
         #print(x)
-    
+
         # Initialize displacement field
         if flow is None:
             flow = np.zeros(list(f1.shape) + [1])
@@ -162,12 +171,12 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
                 # Apply separable cross-correlation to calculate linear equation
                 # for each pixel: G*d = h
                 G = scipy.ndimage.correlate1d(ATA, w, axis=0, mode="constant", cval=0)
-                G = scipy.ndimage.correlate1d(G, w, axis=1, mode="constant", cval=0)
+                #G = scipy.ndimage.correlate1d(G, w, axis=1, mode="constant", cval=0)
     
                 h = scipy.ndimage.correlate1d(ATb, w, axis=0, mode="constant", cval=0)
-                h = scipy.ndimage.correlate1d(h, w, axis=1, mode="constant", cval=0)
+                #h = scipy.ndimage.correlate1d(h, w, axis=1, mode="constant", cval=0)
     
-                d = (S @ np.linalg.solve(G, h)[..., None])[..., 0]
+                flow = (S @ np.linalg.solve(G, h)[..., None])[..., 0]
     
             # if mu is not 0, it should be used to regularize the least squares problem
             # and "force" the background warp onto uncertain pixels
@@ -204,7 +213,8 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         self.logger.info(f"sigma_flow={sigma_flow}")
         self.logger.info(f"num_iters={num_iters}")
         c1 = np.ones_like(target)
-        c2 = np.ones_like(reference)
+        #c2 = np.ones_like(reference)
+        c2 = c1
     
         # ---------------------------------------------------------------
         # calculate optical flow with this algorithm
@@ -241,7 +251,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
                 zip(
                     *list(
                         map(
-                            partial(skimage.transform.pyramid_gaussian, max_layer=pyr_levels),
+                            partial(pyramid_gaussian.get_pyramid, num_levels=pyr_levels),
                             [target, reference, c1, c2],
                         )
                     )
@@ -251,10 +261,12 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
             if flow is not None:
                 # TODO: account for shapes not quite matching
                 #d = skimage.transform.pyramid_expand(d, multichannel=True)
-                flow = skimage.transform.pyramid_expand(flow, channel_axis=1)
+                flow = pyramid_gaussian.expand_level(flow)
                 flow = flow[: pyr1.shape[0]]
-    
+            self.logger.debug(f"np.max(pyr1)={np.max(pyr1)}")
+            self.logger.debug(f"np.max(pyr2)={np.max(pyr2)}")
             flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=sigma_poly, sigma_flow=sigma_flow, num_iters=num_iters, **opts)
+            print("max flow", np.max(flow))
     
         #xw = d + np.moveaxis(np.indices(target.shape), 0, -1)
         #return xw

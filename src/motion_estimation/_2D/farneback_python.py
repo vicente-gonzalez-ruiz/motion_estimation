@@ -58,11 +58,12 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         flow
             Optical flow field. flow[i, j] is the (y, x) displacement for pixel (i, j)
         """
-        self.logger.info(f"sigma_poly={sigma_poly}")
-        self.logger.info(f"sigma_flow={sigma_flow}")
-        self.logger.info(f"num_iters={num_iters}")
-        self.logger.info(f"model={model}")
-        self.logger.info(f"mu={mu}")
+        self.logger.debug(f"sigma_poly={sigma_poly}")
+        self.logger.debug(f"sigma_flow={sigma_flow}")
+        self.logger.debug(f"num_iters={num_iters}")
+        self.logger.debug(f"model={model}")
+        self.logger.debug(f"mu={mu}")
+        self.logger.info(f"shape={f1.shape}")
     
         # TODO: add initial warp parameters as optional input?
     
@@ -269,7 +270,8 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
                 #d = skimage.transform.pyramid_expand(d, multichannel=True)
                 flow = skimage.transform.pyramid_expand(flow, channel_axis=2)
                 flow = flow[: pyr1.shape[0], : pyr2.shape[1]]
-    
+            self.logger.debug(f"np.max(pyr1)={np.max(pyr1)}")
+            self.logger.debug(f"np.max(pyr2)={np.max(pyr2)}")
             flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=sigma_poly, sigma_flow=sigma_flow, num_iters=num_iters, **opts)
     
         #xw = d + np.moveaxis(np.indices(target.shape), 0, -1)
