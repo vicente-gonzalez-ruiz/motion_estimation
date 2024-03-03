@@ -65,14 +65,6 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         self.logger.debug(f"model={model}")
         self.logger.debug(f"mu={mu}")
         self.logger.info(f"shape={f1.shape}")
-        print("f1", np.max(f1))
-        print("f2", np.max(f2))
-        print("c1", np.max(c1))
-        print("c2", np.max(c2))
-        print("f1.dtype", f1.dtype)
-        print("f2.dtype", f2.dtype)
-        print("c1.dtype", c1.dtype)
-        print("c2.dtype", c2.dtype)
 
         # TODO: add initial warp parameters as optional input?
 
@@ -266,7 +258,6 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
             self.logger.debug(f"np.max(pyr1)={np.max(pyr1)}")
             self.logger.debug(f"np.max(pyr2)={np.max(pyr2)}")
             flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=sigma_poly, sigma_flow=sigma_flow, num_iters=num_iters, **opts)
-            print("max flow", np.max(flow))
     
         #xw = d + np.moveaxis(np.indices(target.shape), 0, -1)
         #return xw
