@@ -27,7 +27,3 @@ def show_vectors(flow, dpi=150, title=None):
     plt.quiver(flow[..., 0][::-1], flow[..., 1])
     plt.title(title, fontsize=10)
     plt.show()
-
-def add_coordinates(flow, target):
-    return flow + np.moveaxis(np.indices(target.shape), 0, -1)
-
