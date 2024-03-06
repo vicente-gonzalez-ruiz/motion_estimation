@@ -253,7 +253,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
             if flow is not None:
                 # TODO: account for shapes not quite matching
                 #d = skimage.transform.pyramid_expand(d, multichannel=True)
-                flow = pyramid_gaussian.expand_level(flow)
+                flow = pyramid_gaussian.expand_level(np.squeeze(flow))[:, None]
                 flow = flow[: pyr1.shape[0]]
             self.logger.debug(f"np.max(pyr1)={np.max(pyr1)}")
             self.logger.debug(f"np.max(pyr2)={np.max(pyr2)}")
