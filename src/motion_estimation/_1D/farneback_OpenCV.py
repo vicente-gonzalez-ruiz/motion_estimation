@@ -12,8 +12,7 @@ logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s
 #logger.setLevel(logging.WARNING)
 #logger.setLevel(logging.INFO)
 #logger.setLevel(logging.DEBUG)
-from . import polinomial_expansion
-from . import pyramid_gaussian
+import motion_estimation
 
 class Farneback(motion_estimation._2D.farneback.Estimator_in_CPU):
 
