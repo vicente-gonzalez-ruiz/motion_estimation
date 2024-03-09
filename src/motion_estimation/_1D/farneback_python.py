@@ -17,14 +17,29 @@ from . import pyramid_gaussian
 
 class Farneback(polinomial_expansion.Polinomial_Expansion):
 
-    def __init__(self, verbosity=logging.INFO):
+    #def __init__(self, pyr_levels=3, poly_n=41, w=5, num_iters=3, verbosity=logging.INFO):
+    #def __init__(self, pyr_levels=3, sigma_poly=4.0, w=5, num_iters=3, verbosity=logging.INFO):
+    def __init__(self, pyr_levels=3, sigma_poly=4.0, sigma_flow=4.0, num_iters=3, verbosity=logging.INFO):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(verbosity)
         super().__init__(verbosity)
+        self.pyr_levels = pyr_levels
+        #self.poly_n = poly_n
+        self.sigma_poly = sigma_poly
+        #self.w = w
+        self.sigma_flow = sigma_flow
+        self.num_iters = num_iters
+        self.logger.info(f"pyr_levels={pyr_levels}")
+        #self.logger.info(f"poly_n={poly_n}")
+        self.logger.info(f"sigma_poly={sigma_poly}")
+        #self.logger.info(f"w={w}")
+        self.logger.info(f"sigma_flow={sigma_flow}")
+        self.logger.info(f"num_iters={num_iters}")
 
-    def get_flow(self,
-        f1, f2, c1, c2, sigma_poly=4.0, sigma_flow=4.0, num_iters=3, flow=None, model="constant", mu=None
-    ):
+    #def get_flow(self, f1, f2, c1, c2, poly_n=41, w=5, num_iters=3, flow=None, model="constant", mu=None):
+    #def get_flow(self, f1, f2, c1, c2, sigma_poly=4.0, w=5, num_iters=3, flow=None, model="constant", mu=None):
+    def get_flow(self, f1, f2, c1, c2, sigma_poly=4.0, sigma_flow=4.0, num_iters=3, flow=None, model="constant", mu=None):
+
         """
         Calculates optical flow using only one level of the algorithm described by Gunnar Farneback
     
@@ -59,8 +74,10 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         flow
             Optical flow field. flow[i] is the x displacement for sample i
         """
+        #self.logger.debug(f"poly_n={poly_n}")
         self.logger.debug(f"sigma_poly={sigma_poly}")
         self.logger.debug(f"sigma_flow={sigma_flow}")
+        #self.logger.debug(f"w={w}")
         self.logger.debug(f"num_iters={num_iters}")
         self.logger.debug(f"model={model}")
         self.logger.debug(f"mu={mu}")
@@ -69,7 +86,9 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         # TODO: add initial warp parameters as optional input?
 
         # Calculate the polynomial expansion at each sample in the signals
+        #A1, B1, C1 = self.poly_expand(f1, c1, poly_n)
         A1, B1, C1 = self.poly_expand(f1, c1, sigma_poly)
+        #A2, B2, C2 = self.poly_expand(f2, c2, poly_n)
         A2, B2, C2 = self.poly_expand(f2, c2, sigma_poly)
 
         # Sample indexes in the signals
@@ -81,9 +100,10 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
             flow = np.zeros(list(f1.shape) + [1])
     
         # Set up applicability convolution window
+        #sigma_flow = (w/2 - 1)/4
         n_flow = int(4 * sigma_flow + 1)
         xw = np.arange(-n_flow, n_flow + 1)
-        w = np.exp(-(xw**2) / (2 * sigma_flow**2))
+        app_conv_win = np.exp(-(xw**2) / (2 * sigma_flow**2))
     
         # Evaluate warp parametrization model at pixel coordinates
         if model == "constant":
@@ -162,10 +182,10 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
             if mu == 0:
                 # Apply separable cross-correlation to calculate linear equation
                 # for each pixel: G*d = h
-                G = scipy.ndimage.correlate1d(ATA, w, axis=0, mode="constant", cval=0)
+                G = scipy.ndimage.correlate1d(ATA, app_conv_win, axis=0, mode="constant", cval=0)
                 #G = scipy.ndimage.correlate1d(G, w, axis=1, mode="constant", cval=0)
     
-                h = scipy.ndimage.correlate1d(ATb, w, axis=0, mode="constant", cval=0)
+                h = scipy.ndimage.correlate1d(ATb, app_conv_win, axis=0, mode="constant", cval=0)
                 #h = scipy.ndimage.correlate1d(h, w, axis=1, mode="constant", cval=0)
     
                 flow = (S @ np.linalg.solve(G, h)[..., None])[..., 0]
@@ -184,11 +204,11 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
                     mu = 1 / 2 * np.trace(G_avg)
     
                 # Apply separable cross-correlation to calculate linear equation
-                G = scipy.ndimage.correlate1d(A_T @ A, w, axis=0, mode="constant", cval=0)
+                G = scipy.ndimage.correlate1d(A_T @ A, app_conv_win, axis=0, mode="constant", cval=0)
                 #G = scipy.ndimage.correlate1d(G, w, axis=1, mode="constant", cval=0)
     
                 h = scipy.ndimage.correlate1d(
-                    (A_T @ delB[..., None])[..., 0], w, axis=0, mode="constant", cval=0
+                    (A_T @ delB[..., None])[..., 0], app_conv_win, axis=0, mode="constant", cval=0
                 )
                 #h = scipy.ndimage.correlate1d(h, w, axis=1, mode="constant", cval=0)
     
@@ -199,11 +219,8 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
     
         return flow
 
-    def pyramid_get_flow(self, target, reference, flow=None, pyr_levels=3, sigma_poly=4.0, sigma_flow=4.0, num_iters=3): # target and reference double's
-        self.logger.info(f"pyr_levels={pyr_levels}")
-        self.logger.info(f"sigma_poly={sigma_poly}")
-        self.logger.info(f"sigma_flow={sigma_flow}")
-        self.logger.info(f"num_iters={num_iters}")
+    def pyramid_get_flow(self, target, reference, flow): # target and reference double's
+
         c1 = np.ones_like(target)
         #c2 = np.ones_like(reference)
         c2 = c1
@@ -243,7 +260,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
                 zip(
                     *list(
                         map(
-                            partial(pyramid_gaussian.get_pyramid, num_levels=pyr_levels),
+                            partial(pyramid_gaussian.get_pyramid, num_levels=self.pyr_levels),
                             [target, reference, c1, c2],
                         )
                     )
@@ -257,8 +274,10 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
                 flow = flow[: pyr1.shape[0]]
             self.logger.debug(f"np.max(pyr1)={np.max(pyr1)}")
             self.logger.debug(f"np.max(pyr2)={np.max(pyr2)}")
-            flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=sigma_poly, sigma_flow=sigma_flow, num_iters=num_iters, **opts)
-    
+            #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, poly_n=self.poly_n, w=self.w, num_iters=self.num_iters, **opts)
+            #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=self.sigma_poly, w=self.w, num_iters=self.num_iters, **opts)
+            flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=self.sigma_poly, sigma_flow=self.sigma_flow, num_iters=self.num_iters, **opts)
+
         #xw = d + np.moveaxis(np.indices(target.shape), 0, -1)
         #return xw
         return flow

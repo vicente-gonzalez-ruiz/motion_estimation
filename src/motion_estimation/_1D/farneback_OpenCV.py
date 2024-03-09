@@ -13,16 +13,17 @@ logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s
 #logger.setLevel(logging.INFO)
 #logger.setLevel(logging.DEBUG)
 import motion_estimation
+from motion_estimation._2D.farneback import Estimator_in_CPU as Estimator
 
-class Farneback(motion_estimation._2D.farneback.Estimator_in_CPU):
+class Farneback(Estimator):
 
-    def __init__(self, l=3, w=5, num_iters=3, poly_n=5, poly_sigma=1.0, verbosity=logging.INFO):
+    def __init__(self, pyr_levels=3, win_side=5, num_iters=3, poly_n=5, poly_sigma=1.0, verbosity=logging.INFO):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(verbosity)
-        self.w = w
-        super().__init__(levels=l, pyr_scale=0.5, win_side=w, iters=num_iters, poly_n, poly_sigma, verbosity)
+        self.win_side = win_side
+        super().__init__(pyr_levels=pyr_levels, win_side=win_side, iters=num_iters, poly_n=poly_n, poly_sigma=poly_sigma)
 
-    def get_flow(self, reference_slice, target_slice, prev_flow=None):
-        flow_slice = self.get_flow(reference=reference_slice, target=target_slice, prev_flow)
+    def get_flow(self, reference_slice, target_slice, flow):
+        flow_slice = self.get_flow(reference=reference_slice, target=target_slice, flow=flow)
         flow = flow_slice[(self.w + 1) >> 1, :]
         return flow

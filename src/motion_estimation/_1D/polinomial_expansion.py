@@ -18,6 +18,7 @@ class Polinomial_Expansion():
         self.logger.setLevel(verbosity)
 
     def poly_expand(self, f, c, sigma):
+    #def poly_expand(self, f, c, poly_n):
         """
         Calculates the local polynomial expansion of a 1D signal.
         
@@ -47,10 +48,14 @@ class Polinomial_Expansion():
         """
 
         # Kernel applicability (gaussian)
-        n = int(4 * sigma + 1)
-        x = np.arange(-n, n + 1, dtype=np.int32)
+        poly_n = int(4 * sigma + 1)
+        #sigma = (poly_n/2 - 1)/4
+        x = np.arange(-poly_n, poly_n + 1, dtype=np.int32)
         a = np.exp(-(x**2) / (2 * sigma**2))
-    
+        #x = np.arange(poly_n, dtype=np.int32)
+        #a = np.ones(poly_n)
+        #print("poly_n=", poly_n, "sigma=", sigma, a)
+
         # b: calculate b from the paper.
         b = np.stack([np.ones(a.shape), x, x**2], axis=-1)
     

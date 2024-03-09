@@ -23,18 +23,18 @@ PYR_SCALE = 0.5
 class Estimator_in_CPU():
     
     def __init__(self,
-            levels=LEVELS, # Number of pyramid layers
-            pyr_scale=PYR_SCALE, # Pyramid slope. Multiply by 2^levels the searching area if the OFE
+            pyr_levels=LEVELS, # Number of pyramid layers
+            #pyr_scale=PYR_SCALE, # Pyramid slope. Multiply by 2^levels the searching area if the OFE
             fast_pyramids=False, # CUDA specific
             win_side=WINDOW_SIDE, # Applicability window side
             iters=ITERS, # Number of iterations at each pyramid level
             poly_n=POLY_N, # Size of the pixel neighborhood used to find the polynomial expansion in each pixel
             poly_sigma=POLY_SIGMA, # Standard deviation of the Gaussian basis used in the polynomial expansion
-            flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN):
+            flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN,
+            verbosity=logging.WARNING):
         
-        logger.info(f"pyr_scale={pyr_scale} levels={levels} winsize={win_side} iterations={iters} poly_n={poly_n} poly_sigma={poly_sigma} flags={flags}")
-        self.pyr_scale = pyr_scale
-        self.levels = levels
+        logger.info(f"pyr_levels={pyr_levels} winsize={win_side} iters={iters} poly_n={poly_n} poly_sigma={poly_sigma} flags={flags}")
+        self.pyr_levels = pyr_levels
         self.win_side = win_side
         self.iters = iters
         self.poly_n = poly_n
@@ -47,10 +47,10 @@ class Estimator_in_CPU():
     def get_times(self):
         return self.running_time
 
-    def get_flow(self,
+    def pyramid_get_flow(self,
             target,
             reference,
-            prev_flow):
+            flow):
 
         if logger.getEffectiveLevel() <= logging.INFO:
             time_0 = time.perf_counter()
@@ -58,9 +58,9 @@ class Estimator_in_CPU():
         flow = cv2.calcOpticalFlowFarneback(
             prev=target,
             next=reference,
-            flow=prev_flow,
-            pyr_scale=self.pyr_scale,
-            levels=self.levels,
+            flow=flow,
+            pyr_scale=PYR_SCALE, #self.pyr_scale,
+            levels=self.pyr_levels,
             winsize=self.win_side,
             iterations=self.iters,
             poly_n=self.poly_n,
@@ -80,7 +80,7 @@ class Estimator_in_GPU(Estimator_in_CPU):
 
     def __init__(self,
             levels=LEVELS,
-            pyr_scale=PYR_SCALE,
+            #pyr_scale=PYR_SCALE,
             fast_pyramids=False,
             win_side=WINDOW_SIDE,
             iters=ITERS,
@@ -88,7 +88,7 @@ class Estimator_in_GPU(Estimator_in_CPU):
             poly_sigma=POLY_SIGMA,
             flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN):
         super().__init(levels,
-                       pyr_scale,
+                       #pyr_scale=PRY_SCALE,
                        fast_pyramids,
                        win_side,
                        iters,
@@ -98,7 +98,7 @@ class Estimator_in_GPU(Estimator_in_CPU):
         
         self.flower = cv2.cuda_FarnebackOpticalFlow.create(
             numLevels=self.levels,
-            pyrScale=self.pyr_scale,
+            pyrScale=PYR_SCALE, #self.pyr_scale,
             fastPyramids=self.fast_pyramids,
             winSize=self.window_side,
             numIters=self.iters,
@@ -112,10 +112,10 @@ class Estimator_in_GPU(Estimator_in_CPU):
     def get_times(self):
         return self.running_time, self.transference_time
 
-    def get_flow(selff,
+    def pyramid_get_flow(self,
             target,
             reference,
-            prev_flow):
+            flow):
         '''The returned flow express the positions of the pixels of target in
 respect of the pixels of reference. In other words, if we project
 target using the flow, get should get reference.
@@ -130,7 +130,7 @@ target using the flow, get should get reference.
         GPU_reference = cv2.cuda_GpuMat()
         GPU_reference.upload(reference)
         GPU_prev_flow = cv2.cuda_GpuMat()
-        GPU_prev_flow.upload(prev_flow)
+        GPU_prev_flow.upload(flow)
         
         if logger.getEffectiveLevel() <= logging.INFO:
             last_transference_time += (time.perf_counter() - time_0)
