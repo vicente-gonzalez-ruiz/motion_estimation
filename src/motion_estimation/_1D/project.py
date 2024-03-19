@@ -1,16 +1,16 @@
 import logging
-logger = logging.getLogger(__name__)
+#logger = logging.getLogger(__name__)
 #logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
 #logger.setLevel(logging.CRITICAL)
 #logger.setLevel(logging.ERROR)
-logger.setLevel(logging.WARNING)
+#logger.setLevel(logging.WARNING)
 #logger.setLevel(logging.INFO)
 #logger.setLevel(logging.DEBUG)
 
 import numpy as np
 from scipy.interpolate import interp1d
 
-def project(signal, flow, interpolation_mode='linear', extension_mode='edge'):
+def project(logger, signal, flow, interpolation_mode='linear', extension_mode='edge'):
     """
     Project a 1D signal using optical flow.
 
