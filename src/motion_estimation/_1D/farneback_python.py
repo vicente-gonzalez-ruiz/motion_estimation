@@ -6,7 +6,7 @@ from functools import partial
 import skimage.transform
 import logging
 #logger = logging.getLogger(__name__)
-logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
+#logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
 #logger.setLevel(logging.CRITICAL)
 #logger.setLevel(logging.ERROR)
 #logger.setLevel(logging.WARNING)
@@ -15,11 +15,12 @@ logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s
 from . import polinomial_expansion
 from . import pyramid_gaussian
 
-class Farneback(polinomial_expansion.Polinomial_Expansion):
+class Estimator(polinomial_expansion.Polinomial_Expansion):
 
     #def __init__(self, pyr_levels=3, poly_n=41, w=5, num_iters=3, verbosity=logging.INFO):
     #def __init__(self, pyr_levels=3, sigma_poly=4.0, w=5, num_iters=3, verbosity=logging.INFO):
-    def __init__(self, pyr_levels=3, sigma_poly=4.0, sigma_flow=4.0, num_iters=3, verbosity=logging.INFO):
+    def __init__(self, logger, pyr_levels=3, sigma_poly=4.0, sigma_flow=4.0, num_iters=3, verbosity=logging.INFO):
+        self.logger = logger
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(verbosity)
         super().__init__(verbosity)

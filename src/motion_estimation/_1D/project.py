@@ -31,7 +31,7 @@ def project(logger, signal, flow, interpolation_mode='linear', extension_mode='e
     
     # Generate coordinates for interpolation
     x_coords = np.arange(len(signal))
-    projected_x_coords = x_coords + flow
+    projected_x_coords = x_coords + np.squeeze(flow)
 
     # Perform 1D interpolation
     interp_func = interp1d(x_coords, signal, kind=interpolation_mode, fill_value='extrapolate', bounds_error=False)

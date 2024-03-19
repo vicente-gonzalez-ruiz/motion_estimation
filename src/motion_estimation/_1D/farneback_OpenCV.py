@@ -6,7 +6,7 @@ from functools import partial
 import skimage.transform
 import logging
 #logger = logging.getLogger(__name__)
-logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
+#logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
 #logger.setLevel(logging.CRITICAL)
 #logger.setLevel(logging.ERROR)
 #logger.setLevel(logging.WARNING)
@@ -17,7 +17,8 @@ from motion_estimation._2D.farneback import Estimator_in_CPU as Estimator
 
 class Farneback(Estimator):
 
-    def __init__(self, pyr_levels=3, win_side=5, num_iters=3, poly_n=5, poly_sigma=1.0, verbosity=logging.INFO):
+    def __init__(self, logger, pyr_levels=3, win_side=5, num_iters=3, poly_n=5, poly_sigma=1.0, verbosity=logging.INFO):
+        self.logger = logger
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(verbosity)
         self.win_side = win_side
