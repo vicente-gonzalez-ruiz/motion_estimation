@@ -3,7 +3,7 @@
 import numpy as np
 import logging
 #logger = logging.getLogger(__name__)
-logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
+#logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
 #logger.setLevel(logging.CRITICAL)
 #logger.setLevel(logging.ERROR)
 #logger.setLevel(logging.WARNING)
@@ -13,9 +13,8 @@ import scipy
 
 class Polinomial_Expansion():
 
-    def __init__(self, verbosity=logging.INFO):
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(verbosity)
+    def __init__(self, logger):
+        self.logger = logger
 
     def poly_expand(self, f, c, sigma):
     #def poly_expand(self, f, c, poly_n):

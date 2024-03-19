@@ -36,7 +36,7 @@ def _expand_level(level, sigma=1.0):
     return expanded_level[:, None]
 
 def expand_level(level):
-    print(level.shape)
+    #print(level.shape)
     x = np.arange(len(level))
     xnew = np.linspace(0, len(level), num=len(x)*2)
     expanded_level = np.interp(xnew, x, level)

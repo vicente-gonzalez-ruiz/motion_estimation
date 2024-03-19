@@ -19,11 +19,8 @@ class Estimator(polinomial_expansion.Polinomial_Expansion):
 
     #def __init__(self, pyr_levels=3, poly_n=41, w=5, num_iters=3, verbosity=logging.INFO):
     #def __init__(self, pyr_levels=3, sigma_poly=4.0, w=5, num_iters=3, verbosity=logging.INFO):
-    def __init__(self, logger, pyr_levels=3, sigma_poly=4.0, sigma_flow=4.0, num_iters=3, verbosity=logging.INFO):
+    def __init__(self, logger, pyr_levels=3, sigma_poly=4.0, sigma_flow=4.0, num_iters=3):
         self.logger = logger
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(verbosity)
-        super().__init__(verbosity)
         self.pyr_levels = pyr_levels
         #self.poly_n = poly_n
         self.sigma_poly = sigma_poly
