@@ -13,9 +13,8 @@ import scipy
 
 class Polinomial_Expansion():
 
-    def __init__(self, verbosity=logging.INFO):
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(verbosity)
+    def __init__(self, logger):
+        self.logger = logger
 
     def poly_expand(self, f, c, sigma):
         """

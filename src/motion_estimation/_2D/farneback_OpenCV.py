@@ -1,12 +1,12 @@
-'''motion_estimation/farneback.py. See
+'''Farmeback's optical flow algorithm (2D). See
 https://docs.opencv.org/3.4/dc/d6b/group__video__track.html#ga5d10ebbd59fe09c5f650289ec0ece5af'''
 
 import logging
-logger = logging.getLogger(__name__)
+#logger = logging.getLogger(__name__)
 #logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
 #logger.setLevel(logging.CRITICAL)
 #logger.setLevel(logging.ERROR)
-logger.setLevel(logging.WARNING)
+#logger.setLevel(logging.WARNING)
 #logger.setLevel(logging.INFO)
 #logger.setLevel(logging.DEBUG)
 
@@ -22,23 +22,21 @@ PYR_SCALE = 0.5
 
 class Estimator_in_CPU():
     
-    def __init__(self,
-            pyr_levels=LEVELS, # Number of pyramid layers
-            #pyr_scale=PYR_SCALE, # Pyramid slope. Multiply by 2^levels the searching area if the OFE
-            fast_pyramids=False, # CUDA specific
-            win_side=WINDOW_SIDE, # Applicability window side
-            iters=ITERS, # Number of iterations at each pyramid level
-            poly_n=POLY_N, # Size of the pixel neighborhood used to find the polynomial expansion in each pixel
-            poly_sigma=POLY_SIGMA, # Standard deviation of the Gaussian basis used in the polynomial expansion
-            flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN,
-            verbosity=logging.WARNING):
+    def __init__(
+        self,
+        logger,
+        pyr_levels=LEVELS, # Number of pyramid layers
+        fast_pyramids=False, # CUDA specific
+        win_side=WINDOW_SIDE, # Applicability window side
+        num_iters=ITERS, # Number of iterations at each pyramid level
+        sigma_poly=POLY_SIGMA, # Standard deviation of the Gaussian basis used in the polynomial expansion
+        flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN):
         
-        logger.info(f"pyr_levels={pyr_levels} winsize={win_side} iters={iters} poly_n={poly_n} poly_sigma={poly_sigma} flags={flags}")
+        logger.info(f"pyr_levels={pyr_levels} winsize={win_side} num_iters={num_iters} poly_n={poly_n} poly_sigma={poly_sigma} flags={flags}")
         self.pyr_levels = pyr_levels
         self.win_side = win_side
-        self.iters = iters
-        self.poly_n = poly_n
-        self.poly_sigma = poly_sigma
+        self.num_iters = num_iters
+        self.sigma_poly = sigma_poly
         self.flags = flags
 
         if logger.getEffectiveLevel() <= logging.INFO:
@@ -62,9 +60,9 @@ class Estimator_in_CPU():
             pyr_scale=PYR_SCALE, #self.pyr_scale,
             levels=self.pyr_levels,
             winsize=self.win_side,
-            iterations=self.iters,
-            poly_n=self.poly_n,
-            poly_sigma=self.poly_sigma,
+            iterations=self.num_iters,
+            poly_n=POLY_N,
+            poly_sigma=self.sigma_poly,
             flags=self.flags)
 
         if logger.getEffectiveLevel() <= logging.INFO:
@@ -83,17 +81,15 @@ class Estimator_in_GPU(Estimator_in_CPU):
             #pyr_scale=PYR_SCALE,
             fast_pyramids=False,
             win_side=WINDOW_SIDE,
-            iters=ITERS,
-            poly_n=POLY_N,
-            poly_sigma=POLY_SIGMA,
+            num_iters=ITERS,
+            sigma_poly=POLY_SIGMA,
             flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN):
         super().__init(levels,
                        #pyr_scale=PRY_SCALE,
                        fast_pyramids,
                        win_side,
-                       iters,
-                       poly_n,
-                       poly_sigma,
+                       num_iters,
+                       sigma_poly,
                        flags)
         
         self.flower = cv2.cuda_FarnebackOpticalFlow.create(
@@ -101,8 +97,8 @@ class Estimator_in_GPU(Estimator_in_CPU):
             pyrScale=PYR_SCALE, #self.pyr_scale,
             fastPyramids=self.fast_pyramids,
             winSize=self.window_side,
-            numIters=self.iters,
-            polyN=self.poly_n,
+            numIters=self.num_iters,
+            polyN=POLY_N,
             polySigma=self.poly_sigma,
             flags=self.flags)
 

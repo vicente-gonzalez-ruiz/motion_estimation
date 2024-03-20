@@ -19,24 +19,24 @@ class Estimator(polinomial_expansion.Polinomial_Expansion):
 
     #def __init__(self, pyr_levels=3, poly_n=41, w=5, num_iters=3, verbosity=logging.INFO):
     #def __init__(self, pyr_levels=3, sigma_poly=4.0, w=5, num_iters=3, verbosity=logging.INFO):
-    def __init__(self, logger, pyr_levels=3, sigma_poly=4.0, sigma_flow=4.0, num_iters=3):
+    def __init__(self, logger, pyr_levels=3, win_side=17, num_iters=3, sigma_poly=4.0):
+        super().__init__(logger)
         self.logger = logger
+        self.sigma_win = win_side/4
+        self.logger.info(f"sigma_win={self.sigma_win}")
         self.pyr_levels = pyr_levels
-        #self.poly_n = poly_n
-        self.sigma_poly = sigma_poly
-        #self.w = w
-        self.sigma_flow = sigma_flow
-        self.num_iters = num_iters
         self.logger.info(f"pyr_levels={pyr_levels}")
         #self.logger.info(f"poly_n={poly_n}")
+        self.sigma_poly = sigma_poly
         self.logger.info(f"sigma_poly={sigma_poly}")
         #self.logger.info(f"w={w}")
-        self.logger.info(f"sigma_flow={sigma_flow}")
+        self.num_iters = num_iters
         self.logger.info(f"num_iters={num_iters}")
 
     #def get_flow(self, f1, f2, c1, c2, poly_n=41, w=5, num_iters=3, flow=None, model="constant", mu=None):
     #def get_flow(self, f1, f2, c1, c2, sigma_poly=4.0, w=5, num_iters=3, flow=None, model="constant", mu=None):
-    def get_flow(self, f1, f2, c1, c2, sigma_poly=4.0, sigma_flow=4.0, num_iters=3, flow=None, model="constant", mu=None):
+    #def get_flow(self, f1, f2, c1, c2, sigma_poly=4.0, sigma_win=4.0, num_iters=3, flow=None, model="constant", mu=None):
+    def get_flow(self, f1, f2, c1, c2, flow=None, model="constant", mu=None):
 
         """
         Calculates optical flow using only one level of the algorithm described by Gunnar Farneback
@@ -53,7 +53,7 @@ class Estimator(polinomial_expansion.Polinomial_Expansion):
             Certainty of first signal
         c2
             Certainty of second signal
-        sigma_flow
+        sigma_win
             Applicability window Gaussian kernel sigma for polynomial matching
         num_iters
             Number of iterations to run (defaults to 1)
@@ -73,10 +73,10 @@ class Estimator(polinomial_expansion.Polinomial_Expansion):
             Optical flow field. flow[i] is the x displacement for sample i
         """
         #self.logger.debug(f"poly_n={poly_n}")
-        self.logger.debug(f"sigma_poly={sigma_poly}")
-        self.logger.debug(f"sigma_flow={sigma_flow}")
+        self.logger.debug(f"sigma_poly={self.sigma_poly}")
+        self.logger.debug(f"sigma_win={self.sigma_win}")
         #self.logger.debug(f"w={w}")
-        self.logger.debug(f"num_iters={num_iters}")
+        self.logger.debug(f"num_iters={self.num_iters}")
         self.logger.debug(f"model={model}")
         self.logger.debug(f"mu={mu}")
         self.logger.info(f"shape={f1.shape}")
@@ -85,9 +85,9 @@ class Estimator(polinomial_expansion.Polinomial_Expansion):
 
         # Calculate the polynomial expansion at each sample in the signals
         #A1, B1, C1 = self.poly_expand(f1, c1, poly_n)
-        A1, B1, C1 = self.poly_expand(f1, c1, sigma_poly)
+        A1, B1, C1 = self.poly_expand(f1, c1, self.sigma_poly)
         #A2, B2, C2 = self.poly_expand(f2, c2, poly_n)
-        A2, B2, C2 = self.poly_expand(f2, c2, sigma_poly)
+        A2, B2, C2 = self.poly_expand(f2, c2, self.sigma_poly)
 
         # Sample indexes in the signals
         x = np.arange(f1.shape[0])[:, None].astype(int)
@@ -98,10 +98,10 @@ class Estimator(polinomial_expansion.Polinomial_Expansion):
             flow = np.zeros(list(f1.shape) + [1])
     
         # Set up applicability convolution window
-        #sigma_flow = (w/2 - 1)/4
-        n_flow = int(4 * sigma_flow + 1)
+        #sigma_win = (w/2 - 1)/4
+        n_flow = int(4 * self.sigma_win + 1)
         xw = np.arange(-n_flow, n_flow + 1)
-        app_conv_win = np.exp(-(xw**2) / (2 * sigma_flow**2))
+        app_conv_win = np.exp(-(xw**2) / (2 * self.sigma_win**2))
     
         # Evaluate warp parametrization model at pixel coordinates
         if model == "constant":
@@ -137,7 +137,7 @@ class Estimator(polinomial_expansion.Polinomial_Expansion):
         S_T = S.swapaxes(-1, -2) # Without effect in 1D
     
         # Iterate convolutions to estimate the optical flow
-        for _ in range(num_iters):
+        for _ in range(self.num_iters):
             # Set flow~ as displacement field fit to nearest pixel (and constrain to not
             # being off image). Note we are setting certainty to 0 for points that
             # would have been off-image had we not constrained them
@@ -217,7 +217,7 @@ class Estimator(polinomial_expansion.Polinomial_Expansion):
     
         return flow
 
-    def pyramid_get_flow(self, target, reference, flow): # target and reference double's
+    def pyramid_get_flow(self, target, reference, flow=None): # target and reference double's
 
         c1 = np.ones_like(target)
         #c2 = np.ones_like(reference)
@@ -233,7 +233,7 @@ class Estimator(polinomial_expansion.Polinomial_Expansion):
         # # to clean edges
         # opts = dict(
         #     sigma_poly=4.0,
-        #     sigma_flow=4.0,
+        #     sigma_win=4.0,
         #     num_iter=3,
         #     model='eight_param',
         #     mu=None,
@@ -242,7 +242,7 @@ class Estimator(polinomial_expansion.Polinomial_Expansion):
         # Configuration using no regularization model
         opts = dict(
             #sigma_poly=4.0,
-            #sigma_flow=4.0,
+            #sigma_win=4.0,
             #num_iter=3,
             model="constant",
             mu=0,
@@ -274,7 +274,8 @@ class Estimator(polinomial_expansion.Polinomial_Expansion):
             self.logger.debug(f"np.max(pyr2)={np.max(pyr2)}")
             #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, poly_n=self.poly_n, w=self.w, num_iters=self.num_iters, **opts)
             #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=self.sigma_poly, w=self.w, num_iters=self.num_iters, **opts)
-            flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=self.sigma_poly, sigma_flow=self.sigma_flow, num_iters=self.num_iters, **opts)
+            #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=self.sigma_poly, sigma_win=self.sigma_win, num_iters=self.num_iters, **opts)
+            flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, **opts)
 
         #xw = d + np.moveaxis(np.indices(target.shape), 0, -1)
         #return xw
