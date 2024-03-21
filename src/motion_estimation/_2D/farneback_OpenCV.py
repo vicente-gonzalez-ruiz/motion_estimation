@@ -44,7 +44,7 @@ class Estimator_in_CPU():
     def get_times(self):
         return self.running_time
 
-    def pyramid_get_flow(self,
+    def get_flow(self,
             target,
             reference,
             flow):
@@ -107,7 +107,7 @@ class Estimator_in_GPU(Estimator_in_CPU):
     def get_times(self):
         return self.running_time, self.transference_time
 
-    def pyramid_get_flow(self,
+    def get_flow(self,
             target,
             reference,
             flow):

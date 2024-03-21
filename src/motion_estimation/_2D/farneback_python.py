@@ -34,7 +34,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         self.sigma_poly = sigma_poly
         self.logger.info(f"sigma_poly={sigma_poly}")
 
-    def get_flow(self,f1, f2, c1, c2, flow=None, model="constant", mu=None
+    def get_flow_iter(self,f1, f2, c1, c2, flow=None, model="constant", mu=None
     ):
         """
         Calculates optical flow using only one level of the algorithm described by Gunnar Farneback
@@ -211,7 +211,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
     
         return flow
 
-    def pyramid_get_flow(self, target, reference, flow=None): # target and reference double's
+    def get_flow(self, target, reference, flow=None): # target and reference double's
 
         # c1 = np.ones_like(target)
         # c2 = np.ones_like(reference)
@@ -281,7 +281,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
                 flow = flow[: pyr1.shape[0], : pyr2.shape[1]]
             self.logger.debug(f"np.max(pyr1)={np.max(pyr1)}")
             self.logger.debug(f"np.max(pyr2)={np.max(pyr2)}")
-            flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, **opts)
+            flow = self.get_flow_iter(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, **opts)
     
         #xw = d + np.moveaxis(np.indices(target.shape), 0, -1)
         #return xw

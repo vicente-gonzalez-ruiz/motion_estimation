@@ -36,7 +36,7 @@ class Estimator(polinomial_expansion.Polinomial_Expansion):
     #def get_flow(self, f1, f2, c1, c2, poly_n=41, w=5, num_iters=3, flow=None, model="constant", mu=None):
     #def get_flow(self, f1, f2, c1, c2, sigma_poly=4.0, w=5, num_iters=3, flow=None, model="constant", mu=None):
     #def get_flow(self, f1, f2, c1, c2, sigma_poly=4.0, sigma_win=4.0, num_iters=3, flow=None, model="constant", mu=None):
-    def get_flow(self, f1, f2, c1, c2, flow=None, model="constant", mu=None):
+    def get_flow_iter(self, f1, f2, c1, c2, flow=None, model="constant", mu=None):
 
         """
         Calculates optical flow using only one level of the algorithm described by Gunnar Farneback
@@ -275,7 +275,7 @@ class Estimator(polinomial_expansion.Polinomial_Expansion):
             #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, poly_n=self.poly_n, w=self.w, num_iters=self.num_iters, **opts)
             #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=self.sigma_poly, w=self.w, num_iters=self.num_iters, **opts)
             #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=self.sigma_poly, sigma_win=self.sigma_win, num_iters=self.num_iters, **opts)
-            flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, **opts)
+            flow = self.get_flow_iter(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, **opts)
 
         #xw = d + np.moveaxis(np.indices(target.shape), 0, -1)
         #return xw
