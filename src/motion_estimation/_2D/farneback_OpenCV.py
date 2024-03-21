@@ -22,17 +22,16 @@ PYR_SCALE = 0.5
 
 class Estimator_in_CPU():
     
-    def __init__(
-        self,
-        logger,
-        pyr_levels=LEVELS, # Number of pyramid layers
-        fast_pyramids=False, # CUDA specific
-        win_side=WINDOW_SIDE, # Applicability window side
-        num_iters=ITERS, # Number of iterations at each pyramid level
-        sigma_poly=POLY_SIGMA, # Standard deviation of the Gaussian basis used in the polynomial expansion
-        flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN):
-        
-        logger.info(f"pyr_levels={pyr_levels} winsize={win_side} num_iters={num_iters} poly_n={poly_n} poly_sigma={poly_sigma} flags={flags}")
+    def __init__(self,
+                logger,
+                pyr_levels=LEVELS, # Number of pyramid layers
+                fast_pyramids=False, # CUDA specific
+                win_side=WINDOW_SIDE, # Applicability window side
+                num_iters=ITERS, # Number of iterations at each pyramid level
+                sigma_poly=POLY_SIGMA, # Standard deviation of the Gaussian basis used in the polynomial expansion
+                flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN):
+        self.logger = logger
+        self.logger.info(f"pyr_levels={pyr_levels} winsize={win_side} num_iters={num_iters} poly_sigma={sigma_poly} flags={flags}")
         self.pyr_levels = pyr_levels
         self.win_side = win_side
         self.num_iters = num_iters
@@ -50,7 +49,7 @@ class Estimator_in_CPU():
             reference,
             flow):
 
-        if logger.getEffectiveLevel() <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
             time_0 = time.perf_counter()
 
         flow = cv2.calcOpticalFlowFarneback(
@@ -65,12 +64,12 @@ class Estimator_in_CPU():
             poly_sigma=self.sigma_poly,
             flags=self.flags)
 
-        if logger.getEffectiveLevel() <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
             time_1 = time.perf_counter()
             last_running_time = time_1 - time_0
             self.total_running_time += last_running_time
 
-        logger.debug(f"avg_OF={np.average(np.abs(flow)):4.2f}")
+        self.logger.debug(f"avg_OF={np.average(np.abs(flow)):4.2f}")
 
         return flow
 

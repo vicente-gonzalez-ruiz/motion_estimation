@@ -1,20 +1,20 @@
 import logging
-logger = logging.getLogger(__name__)
+#logger = logging.getLogger(__name__)
 #logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
 #logger.setLevel(logging.CRITICAL)
 #logger.setLevel(logging.ERROR)
-logger.setLevel(logging.WARNING)
+#logger.setLevel(logging.WARNING)
 #logger.setLevel(logging.INFO)
 #logger.setLevel(logging.DEBUG)
 
 import cv2
 import numpy as np
 
-def project(
-        image,
-        flow,
-        interpolation_mode=cv2.INTER_LINEAR,
-        extension_mode=cv2.BORDER_REPLICATE):
+def project(logger,
+            image,
+            flow,
+            interpolation_mode=cv2.INTER_LINEAR,
+            extension_mode=cv2.BORDER_REPLICATE):
     
     logger.info(f"reference.shape={image.shape}")
     
