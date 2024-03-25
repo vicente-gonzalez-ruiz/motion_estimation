@@ -13,28 +13,21 @@ import logging
 #logger.setLevel(logging.INFO)
 #logger.setLevel(logging.DEBUG)
 from . import polinomial_expansion
+from . import pyramid_gaussian
 
-class Farneback(polinomial_expansion.Polinomial_Expansion):
+PYRAMID_LEVELS = 3
+NUM_ITERATIONS = 1
+WINDOW_WIDTH = 17
+N_POLY = 25
 
-    def __init__(
-        self,
-        logger,
-        pyr_levels=3,
-        win_side=17,
-        num_iters=3,
-        sigma_poly=4.0):
+class Farneback:
+
+    def __init__(self, logger):
         super().__init__(logger)
         self.logger = logger
-        self.sigma_win = win_side/4
-        self.logger.info(f"sigma_win={self.sigma_win}")
-        self.pyr_levels = pyr_levels
-        self.logger.info(f"pyr_levels={pyr_levels}")
-        self.num_iters = num_iters
-        self.logger.info(f"num_iters={num_iters}")
-        self.sigma_poly = sigma_poly
-        self.logger.info(f"sigma_poly={sigma_poly}")
+        self.PE = polinomial_expansion.Polinomial_Expansion(logger)
 
-    def get_flow_iter(self,f1, f2, c1, c2, flow=None, model="constant", mu=None
+    def flow_iterative(self,f1, f2, c1, c2, sigma_flow, num_iter=NUM_ITERATIONS, flow=None, model="constant", mu=None
     ):
         """
         Calculates optical flow using only one level of the algorithm described by Gunnar Farneback
@@ -45,13 +38,13 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
             First image
         f2
             Second image
-        sigma_poly
+        sigma
             Polynomial expansion applicability Gaussian kernel sigma
         c1
             Certainty of first image
         c2
             Certainty of second image
-        sigma_win
+        sigma_flow
             Applicability window Gaussian kernel sigma for polynomial matching
         num_iters
             Number of iterations to run (defaults to 1)
@@ -70,18 +63,12 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
         flow
             Optical flow field. flow[i, j] is the (y, x) displacement for pixel (i, j)
         """
-        self.logger.debug(f"sigma_poly={self.sigma_poly}")
-        self.logger.debug(f"sigma_win={self.sigma_win}")
-        self.logger.debug(f"num_iters={self.num_iters}")
-        self.logger.debug(f"model={model}")
-        self.logger.debug(f"mu={mu}")
-        self.logger.info(f"shape={f1.shape}")
     
         # TODO: add initial warp parameters as optional input?
     
         # Calculate the polynomial expansion at each point in the images
-        A1, B1, C1 = self.poly_expand(f1, c1, self.sigma_poly)
-        A2, B2, C2 = self.poly_expand(f2, c2, self.sigma_poly)
+        A1, B1, C1 = self.PE.poly_expand(f1, c1, sigma)
+        A2, B2, C2 = self.PE.poly_expand(f2, c2, sigma)
     
         # Pixel coordinates of each point in the images
         x = np.stack(
@@ -211,7 +198,21 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
     
         return flow
 
-    def get_flow(self, target, reference, flow=None): # target and reference double's
+    def get_flow_iteration(self, f1, f2, c1, c2, window_width=WINDOW_WIDTH, num_iters=NUM_ITERATIONS, flow=None, model="constant", mu=None):
+        sigma_flow = (window_width - 1)/4
+        #self.logger.debug(f"poly_n={poly_n}")
+        self.logger.debug(f"window_width={window_width}")
+        self.logger.debug(f"num_iters={num_iters}")
+        self.logger.debug(f"sigma_flow={sigma_flow}")
+        #self.logger.debug(f"w={w}")
+        self.logger.debug(f"model={model}")
+        self.logger.debug(f"mu={mu}")
+        self.logger.debug(f"shape={f1.shape}")
+        return flow_iterative(self, f1, f2, c1, c2, sigma_flow, num_iters, flow, model, mu)
+
+    def pyramid_get_flow(self, target, reference, flow=None pyramid_levels=PYRAMID_LEVELS): # target and reference double's
+
+        self.logger.info(f"pyramid_levels={pyramid_levels}")
 
         # c1 = np.ones_like(target)
         # c2 = np.ones_like(reference)
@@ -267,7 +268,7 @@ class Farneback(polinomial_expansion.Polinomial_Expansion):
                 zip(
                     *list(
                         map(
-                            partial(skimage.transform.pyramid_gaussian, max_layer=pyr_levels),
+                            partial(skimage.transform.pyramid_gaussian, max_layer=pyramid_levels),
                             [target, reference, c1, c2],
                         )
                     )

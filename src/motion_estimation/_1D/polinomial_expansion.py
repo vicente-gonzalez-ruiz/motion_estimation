@@ -1,4 +1,4 @@
-'''Farneback's polinomial expansion (1D). See https://github.com/ericPrince/optical-flow'''
+'''Farneback's polynomial expansion (1D). See https://github.com/ericPrince/optical-flow'''
 
 import numpy as np
 import logging
@@ -99,3 +99,7 @@ class Polinomial_Expansion():
         C = r[..., 0]
     
         return A, B, C
+
+    def expand(self, f, c, window_length):
+        sigma = (window_length - 1)/4
+        return self.poly_expand(f, c, sigma)

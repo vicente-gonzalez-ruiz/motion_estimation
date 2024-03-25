@@ -1,9 +1,9 @@
 '''Farneback's polinomial expansion (2D). See https://github.com/ericPrince/optical-flow'''
 
 import numpy as np
-import logging
+#import logging
 #logger = logging.getLogger(__name__)
-logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
+#logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
 #logger.setLevel(logging.CRITICAL)
 #logger.setLevel(logging.ERROR)
 #logger.setLevel(logging.WARNING)
@@ -43,8 +43,8 @@ class Polinomial_Expansion():
             Constant term of polynomial expansion
         """
         # Calculate applicability kernel (1D because it is separable)
-        n = int(4 * sigma + 1)
-        x = np.arange(-n, n + 1, dtype=np.int32)
+        poly_n = int(4 * sigma + 1)
+        x = np.arange(-poly_n, poly_n + 1, dtype=np.int32)
         a = np.exp(-(x**2) / (2 * sigma**2))  # a: applicability kernel [n]
     
         # b: calculate b from the paper. Calculate separately for X and Y dimensions
@@ -117,3 +117,7 @@ class Polinomial_Expansion():
         C = r[..., 0]
     
         return A, B, C
+
+    def expand(self, f, c, window_side):
+        sigma = (window_side - 1)/4
+        return self.poly_expand(f, c, sigma)
