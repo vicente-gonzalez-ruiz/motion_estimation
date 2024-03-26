@@ -24,10 +24,10 @@ def project(logger, signal, flow, interpolation_mode='linear', extension_mode='e
     - projection: 1D numpy array, the projected signal.
     """
 
-    logger.info(f"len(signal)={len(signal)}")
-    logger.info(f"len(flow)={len(flow)}")
-    logger.info(f"interpolation_mode={interpolation_mode}")
-    logger.info(f"extension_mode={extension_mode}")
+    logger.debug(f"len(signal)={len(signal)}")
+    logger.debug(f"len(flow)={len(flow)}")
+    logger.debug(f"interpolation_mode={interpolation_mode}")
+    logger.debug(f"extension_mode={extension_mode}")
     
     # Generate coordinates for interpolation
     x_coords = np.arange(len(signal))

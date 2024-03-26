@@ -15,10 +15,10 @@ import logging
 from . import polinomial_expansion
 from . import pyramid_gaussian
 
-PYRAMID_LEVELS = 3
+PYRAMID_LEVELS = 1
 NUM_ITERATIONS = 1
 WINDOW_LENGTH = 17
-N_POLY = 25
+N_POLY = 17
 
 class Estimator:
 
@@ -217,7 +217,7 @@ class Estimator:
 
     def pyramid_get_flow(self, target, reference, N_poly=N_POLY, window_length=WINDOW_LENGTH, num_iters=NUM_ITERATIONS, pyramid_levels=PYRAMID_LEVELS, flow=None, model="constant", mu=None): # target and reference double's
 
-        self.logger.info(f"pyramid_levels={pyramid_levels}")
+        self.logger.debug(f"pyramid_levels={pyramid_levels}")
 
         c1 = np.ones_like(target)
         #c2 = np.ones_like(reference)
