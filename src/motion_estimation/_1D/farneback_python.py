@@ -24,7 +24,7 @@ class Estimator:
 
     #def __init__(self, pyr_levels=3, poly_n=41, w=5, num_iters=3, verbosity=logging.INFO):
     #def __init__(self, pyr_levels=3, poly_sigma=4.0, w=5, num_iters=3, verbosity=logging.INFO):
-    def __init__(self, logger,):
+    def __init__(self, logger):
         self.logger = logger
         self.PE = polinomial_expansion.Polinomial_Expansion(logger)
 
@@ -219,9 +219,9 @@ class Estimator:
 
         self.logger.debug(f"pyramid_levels={pyramid_levels}")
 
-        c1 = np.ones_like(target)
-        #c2 = np.ones_like(reference)
-        c2 = c1
+        c1 = np.ones_like(reference)
+        c2 = np.ones_like(target)
+        #c2 = c1
     
         # ---------------------------------------------------------------
         # calculate optical flow with this algorithm
@@ -259,7 +259,7 @@ class Estimator:
                     *list(
                         map(
                             partial(pyramid_gaussian.get_pyramid, num_levels=pyramid_levels),
-                            [target, reference, c1, c2],
+                            [reference, target, c1, c2],
                         )
                     )
                 )
@@ -275,7 +275,7 @@ class Estimator:
             #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, poly_n=self.poly_n, w=self.w, num_iters=self.num_iters, **opts)
             #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=self.sigma_poly, w=self.w, num_iters=self.num_iters, **opts)
             #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=self.sigma_poly, sigma_flow=self.sigma_flow, num_iters=self.num_iters, **opts)
-            flow = self.get_flow_iteration(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, **opts)
+            flow = self.get_flow_iteration(f1=pyr1, f2=pyr2, c1=c1_, c2=c2_, N_poly=N_poly, window_length=window_length, num_iters=num_iters, flow=flow, **opts)
 
         #xw = d + np.moveaxis(np.indices(target.shape), 0, -1)
         #return xw
