@@ -15,19 +15,26 @@ import logging
 from . import polinomial_expansion
 from . import pyramid_gaussian
 
-PYRAMID_LEVELS = 3
+PYRAMID_LEVELS = 1
 NUM_ITERATIONS = 1
-WINDOW_WIDTH = 17
-N_POLY = 25
+WINDOW_SIDE = 7
+N_POLY = 7
 
-class Farneback:
+class Estimator:
 
     def __init__(self, logger):
         super().__init__(logger)
         self.logger = logger
         self.PE = polinomial_expansion.Polinomial_Expansion(logger)
 
-    def flow_iterative(self,f1, f2, c1, c2, sigma_flow, num_iter=NUM_ITERATIONS, flow=None, model="constant", mu=None
+    def flow_iterative(
+        self, f1, f2, c1, c2,
+        flow=None,
+        sigma,
+        sigma_flow,
+        num_iter=NUM_ITERATIONS,
+        model="constant",
+        mu=None
     ):
         """
         Calculates optical flow using only one level of the algorithm described by Gunnar Farneback
@@ -46,7 +53,7 @@ class Farneback:
             Certainty of second image
         sigma_flow
             Applicability window Gaussian kernel sigma for polynomial matching
-        num_iters
+        num_iterations
             Number of iterations to run (defaults to 1)
         flow: (optional)
             Initial displacement field
@@ -119,7 +126,7 @@ class Farneback:
         S_T = S.swapaxes(-1, -2)
     
         # Iterate convolutions to estimate the optical flow
-        for _ in range(self.num_iters):
+        for _ in range(self.num_iterations):
             # Set flow~ as displacement field fit to nearest pixel (and constrain to not
             # being off image). Note we are setting certainty to 0 for points that
             # would have been off-image had we not constrained them
@@ -198,19 +205,38 @@ class Farneback:
     
         return flow
 
-    def get_flow_iteration(self, f1, f2, c1, c2, window_width=WINDOW_WIDTH, num_iters=NUM_ITERATIONS, flow=None, model="constant", mu=None):
-        sigma_flow = (window_width - 1)/4
-        #self.logger.debug(f"poly_n={poly_n}")
-        self.logger.debug(f"window_width={window_width}")
-        self.logger.debug(f"num_iters={num_iters}")
+    def get_flow_iteration(
+        self, f1, f2, c1, c2,
+        flow=None,
+        N_poly=N_POLY,
+        window_side=WINDOW_SIDE,
+        num_iterations=NUM_ITERATIONS,
+        model="constant",
+        mu=None
+    ):
+        sigma = (N_poly - 1)/4
+        sigma_flow = (window_side - 1)/4
+        self.logger.debug(f"N_poly={N_poly} (sigma={sigma})")
+        self.logger.debug(f"window_side={window_side}")
+        self.logger.debug(f"num_iterations={num_iterations}")
         self.logger.debug(f"sigma_flow={sigma_flow}")
         #self.logger.debug(f"w={w}")
         self.logger.debug(f"model={model}")
         self.logger.debug(f"mu={mu}")
         self.logger.debug(f"shape={f1.shape}")
-        return flow_iterative(self, f1, f2, c1, c2, sigma_flow, num_iters, flow, model, mu)
+        return flow_iterative(self, f1, f2, c1, c2, sigma, sigma_flow, num_iterations, flow, model, mu)
 
-    def pyramid_get_flow(self, target, reference, flow=None pyramid_levels=PYRAMID_LEVELS): # target and reference double's
+    def pyramid_get_flow(
+        self,
+        target,
+        reference,
+        flow=None,
+        pyramid_levels=PYRAMID_LEVELS,
+        window_side=WINDOW_SIDE,
+        num_iterations=NUM_ITERATIONS,
+        N_poly=N_POLY,
+        model="constant",
+        mu=None): # target and reference double's
 
         self.logger.info(f"pyramid_levels={pyramid_levels}")
 
@@ -269,7 +295,7 @@ class Farneback:
                     *list(
                         map(
                             partial(skimage.transform.pyramid_gaussian, max_layer=pyramid_levels),
-                            [target, reference, c1, c2],
+                            [reference, target, c1, c2],
                         )
                     )
                 )
@@ -282,7 +308,13 @@ class Farneback:
                 flow = flow[: pyr1.shape[0], : pyr2.shape[1]]
             self.logger.debug(f"np.max(pyr1)={np.max(pyr1)}")
             self.logger.debug(f"np.max(pyr2)={np.max(pyr2)}")
-            flow = self.get_flow_iter(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, **opts)
+            flow = self.get_flow_iteration(
+                f1=pyr1, f2=pyr2, c1=c1_, c2=c2_,
+                flow=flow,
+                N_poly=N_poly,
+                window_side=window_side,
+                num_iterations=num_iterations,
+                **opts)
     
         #xw = d + np.moveaxis(np.indices(target.shape), 0, -1)
         #return xw

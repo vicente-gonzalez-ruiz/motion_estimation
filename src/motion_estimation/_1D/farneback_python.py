@@ -22,16 +22,24 @@ N_POLY = 17
 
 class Estimator:
 
-    #def __init__(self, pyr_levels=3, poly_n=41, w=5, num_iters=3, verbosity=logging.INFO):
-    #def __init__(self, pyr_levels=3, poly_sigma=4.0, w=5, num_iters=3, verbosity=logging.INFO):
+    #def __init__(self, pyr_levels=3, poly_n=41, w=5, num_iterations=3, verbosity=logging.INFO):
+    #def __init__(self, pyr_levels=3, poly_sigma=4.0, w=5, num_iterations=3, verbosity=logging.INFO):
     def __init__(self, logger):
         self.logger = logger
         self.PE = polinomial_expansion.Polinomial_Expansion(logger)
 
-    #def get_flow(self, f1, f2, c1, c2, poly_n=41, w=5, num_iters=3, flow=None, model="constant", mu=None):
-    #def get_flow(self, f1, f2, c1, c2, poly_window_length=4.0, w=5, num_iters=3, flow=None, model="constant", mu=None):
-    #def get_flow(self, f1, f2, c1, c2, poly_window_length=4.0, sigma_flow=4.0, num_iters=3, flow=None, model="constant", mu=None):
-    def flow_iterative(self, f1, f2, c1, c2, sigma, sigma_flow, num_iter=NUM_ITERATIONS, flow=None, model="constant", mu=None):
+    #def get_flow(self, f1, f2, c1, c2, poly_n=41, w=5, num_iterations=3, flow=None, model="constant", mu=None):
+    #def get_flow(self, f1, f2, c1, c2, poly_window_length=4.0, w=5, num_iterations=3, flow=None, model="constant", mu=None):
+    #def get_flow(self, f1, f2, c1, c2, poly_window_length=4.0, sigma_flow=4.0, num_iterations=3, flow=None, model="constant", mu=None):
+    def flow_iterative(
+        self, f1, f2, c1, c2,
+        flow=None,
+        sigma=4.0,
+        sigma_flow=4.0,
+        num_iter=NUM_ITERATIONS,
+        model="constant",
+        mu=None
+    ):
 
         """
         Calculates optical flow using only one level of the algorithm described by Gunnar Farneback
@@ -50,7 +58,7 @@ class Estimator:
             Certainty of second signal
         sigma_flow
             Applicability window Gaussian kernel sigma for polynomial matching
-        num_iters
+        num_iterations
             Number of iterations to run (defaults to 1)
         flow: (optional)
             Initial displacement field
@@ -122,7 +130,7 @@ class Estimator:
             raise ValueError("Invalid parametrization model")
     
         S_T = S.swapaxes(-1, -2) # Without effect in 1D
-    
+
         # Iterate convolutions to estimate the optical flow
         for _ in range(num_iter):
             # Set flow~ as displacement field fit to nearest pixel (and constrain to not
@@ -204,19 +212,45 @@ class Estimator:
     
         return flow
 
-    def get_flow_iteration(self, f1, f2, c1, c2, N_poly=N_POLY, window_length=WINDOW_LENGTH, num_iters=NUM_ITERATIONS, flow=None, model="constant", mu=None):
+    def get_flow_iteration(
+        self, f1, f2, c1, c2,
+        flow=None,
+        N_poly=N_POLY,
+        window_length=WINDOW_LENGTH,
+        num_iterations=NUM_ITERATIONS,
+        model="constant",
+        mu=None
+    ):
+
         sigma = (N_poly - 1)/4
         sigma_flow = (window_length - 1)/4
         self.logger.debug(f"N_poly={N_poly} (sigma={sigma})")
         self.logger.debug(f"window_length={window_length} (sigma_flow={sigma_flow})")
-        self.logger.debug(f"num_iters={num_iters}")
+        self.logger.debug(f"num_iterations={num_iterations}")
         self.logger.debug(f"model={model}")
         self.logger.debug(f"mu={mu}")
         self.logger.debug(f"shape={f1.shape}")
-        return self.flow_iterative(f1, f2, c1, c2, sigma, sigma_flow, num_iters, flow, model, mu)
+        return self.flow_iterative(
+            f1=f1, f2=f2, c1=c1, c2=c2,
+            sigma=sigma,
+            sigma_flow=sigma_flow,
+            num_iter=num_iterations,
+            flow=flow,
+            model=model,
+            mu=mu)
 
-    def pyramid_get_flow(self, target, reference, N_poly=N_POLY, window_length=WINDOW_LENGTH, num_iters=NUM_ITERATIONS, pyramid_levels=PYRAMID_LEVELS, flow=None, model="constant", mu=None): # target and reference double's
-
+    def pyramid_get_flow(
+        self,
+        target,
+        reference,
+        flow=None,
+        pyramid_levels=PYRAMID_LEVELS, 
+        window_length=WINDOW_LENGTH,
+        num_iterations=NUM_ITERATIONS,
+        N_poly=N_POLY,
+        model="constant",
+        mu=None): # target and reference double's
+        
         self.logger.debug(f"pyramid_levels={pyramid_levels}")
 
         c1 = np.ones_like(reference)
@@ -272,10 +306,16 @@ class Estimator:
                 flow = flow[: pyr1.shape[0]]
             self.logger.debug(f"np.max(pyr1)={np.max(pyr1)}")
             self.logger.debug(f"np.max(pyr2)={np.max(pyr2)}")
-            #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, poly_n=self.poly_n, w=self.w, num_iters=self.num_iters, **opts)
-            #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=self.sigma_poly, w=self.w, num_iters=self.num_iters, **opts)
-            #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=self.sigma_poly, sigma_flow=self.sigma_flow, num_iters=self.num_iters, **opts)
-            flow = self.get_flow_iteration(f1=pyr1, f2=pyr2, c1=c1_, c2=c2_, N_poly=N_poly, window_length=window_length, num_iters=num_iters, flow=flow, **opts)
+            #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, poly_n=self.poly_n, w=self.w, num_iterations=self.num_iterations, **opts)
+            #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=self.sigma_poly, w=self.w, num_iterations=self.num_iterations, **opts)
+            #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=self.sigma_poly, sigma_flow=self.sigma_flow, num_iterations=self.num_iterations, **opts)
+            flow = self.get_flow_iteration(
+                f1=pyr1, f2=pyr2, c1=c1_, c2=c2_,
+                flow=flow,
+                N_poly=N_poly,
+                window_length=window_length,
+                num_iterations=num_iterations,
+                **opts)
 
         #xw = d + np.moveaxis(np.indices(target.shape), 0, -1)
         #return xw

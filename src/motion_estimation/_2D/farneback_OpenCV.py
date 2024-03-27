@@ -9,60 +9,67 @@ import logging
 #logger.setLevel(logging.WARNING)
 #logger.setLevel(logging.INFO)
 #logger.setLevel(logging.DEBUG)
+import time
 
 import cv2
 import numpy as np
 
-LEVELS = 3
+PYRAMID_LEVELS = 3
 WINDOW_SIDE = 5
-ITERS = 5
-POLY_N = 5
+NUM_ITERATIONS = 5
+N_POLY = 5
 POLY_SIGMA = 1.2
 PYR_SCALE = 0.5
 
 class Estimator_in_CPU():
     
     def __init__(self,
-                logger,
-                pyr_levels=LEVELS, # Number of pyramid layers
-                fast_pyramids=False, # CUDA specific
-                win_side=WINDOW_SIDE, # Applicability window side
-                num_iters=ITERS, # Number of iterations at each pyramid level
-                sigma_poly=POLY_SIGMA, # Standard deviation of the Gaussian basis used in the polynomial expansion
-                flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN):
+                logger):
         self.logger = logger
-        self.logger.info(f"pyr_levels={pyr_levels} winsize={win_side} num_iters={num_iters} poly_sigma={sigma_poly} flags={flags}")
+        '''
         self.pyr_levels = pyr_levels
         self.win_side = win_side
         self.num_iters = num_iters
         self.sigma_poly = sigma_poly
         self.flags = flags
+        for attr, value in vars(self).items():
+            self.logger.info(f"{attr}: {value}")
+        '''
 
         if logger.getEffectiveLevel() <= logging.INFO:
             self.running_time = 0
+            self.total_running_time = 0
 
     def get_times(self):
         return self.running_time
 
-    def get_flow(self,
-            target,
-            reference,
-            flow):
+    def pyramid_get_flow(
+        self,
+        target,
+        reference,
+        flow=None,
+        pyramid_levels=PYRAMID_LEVELS, # Number of pyramid layers
+        window_side=WINDOW_SIDE, # Applicability window side
+        num_iterations=NUM_ITERATIONS, # Number of iterations at each pyramid level
+        N_poly=N_POLY, # Standard deviation of the Gaussian basis used in the polynomial expansion
+        flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN):
 
         if self.logger.getEffectiveLevel() <= logging.INFO:
             time_0 = time.perf_counter()
+
+        sigma_poly = (N_poly - 1)/4
 
         flow = cv2.calcOpticalFlowFarneback(
             prev=target,
             next=reference,
             flow=flow,
             pyr_scale=PYR_SCALE, #self.pyr_scale,
-            levels=self.pyr_levels,
-            winsize=self.win_side,
-            iterations=self.num_iters,
-            poly_n=POLY_N,
-            poly_sigma=self.sigma_poly,
-            flags=self.flags)
+            levels=pyramid_levels,
+            winsize=window_side,
+            iterations=num_iterations,
+            poly_n=N_poly,
+            poly_sigma=sigma_poly,
+            flags=flags)
 
         if self.logger.getEffectiveLevel() <= logging.INFO:
             time_1 = time.perf_counter()
@@ -76,18 +83,18 @@ class Estimator_in_CPU():
 class Estimator_in_GPU(Estimator_in_CPU):
 
     def __init__(self,
-            levels=LEVELS,
+            levels=PYRAMID_LEVELS,
             #pyr_scale=PYR_SCALE,
             fast_pyramids=False,
             win_side=WINDOW_SIDE,
-            num_iters=ITERS,
+            num_iterations=NUM_ITERATIONS,
             sigma_poly=POLY_SIGMA,
             flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN):
         super().__init(levels,
                        #pyr_scale=PRY_SCALE,
                        fast_pyramids,
                        win_side,
-                       num_iters,
+                       num_iterations,
                        sigma_poly,
                        flags)
         
@@ -96,7 +103,7 @@ class Estimator_in_GPU(Estimator_in_CPU):
             pyrScale=PYR_SCALE, #self.pyr_scale,
             fastPyramids=self.fast_pyramids,
             winSize=self.window_side,
-            numIters=self.num_iters,
+            numIters=self.num_iterations,
             polyN=POLY_N,
             polySigma=self.poly_sigma,
             flags=self.flags)
