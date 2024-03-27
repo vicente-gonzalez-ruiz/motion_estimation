@@ -16,7 +16,7 @@ def project(logger,
             interpolation_mode=cv2.INTER_LINEAR,
             extension_mode=cv2.BORDER_REPLICATE):
     
-    logger.info(f"reference.shape={image.shape}")
+    logger.debug(f"reference.shape={image.shape}")
     
     height, width = flow.shape[:2]
     map_x = np.tile(np.arange(width), (height, 1))
