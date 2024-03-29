@@ -58,7 +58,7 @@ class Estimator_in_CPU():
             time_0 = time.perf_counter()
 
         sigma_poly = (N_poly - 1)/4
-
+        self.logger.debug(f"sigma_poly={sigma_poly}")
         flow = cv2.calcOpticalFlowFarneback(
             prev=target,
             next=reference,
