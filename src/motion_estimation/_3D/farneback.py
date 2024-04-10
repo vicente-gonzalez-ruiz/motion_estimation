@@ -1,4 +1,4 @@
-'''Farneback's optical flow algorithm (1D). See https://github.com/ericPrince/optical-flow'''
+'''Farneback's optical flow algorithm (3D). See https://github.com/ericPrince/optical-flow'''
 
 import numpy as np
 import scipy
@@ -17,20 +17,15 @@ from . import pyramid_gaussian
 
 PYRAMID_LEVELS = 1
 NUM_ITERATIONS = 1
-WINDOW_LENGTH = 17
-N_POLY = 17
+WINDOW_SIDE = 7
+N_POLY = 7
 
 class Estimator:
 
-    #def __init__(self, pyr_levels=3, poly_n=41, w=5, num_iterations=3, verbosity=logging.INFO):
-    #def __init__(self, pyr_levels=3, poly_sigma=4.0, w=5, num_iterations=3, verbosity=logging.INFO):
     def __init__(self, logger):
         self.logger = logger
         self.PE = polinomial_expansion.Polinomial_Expansion(logger)
 
-    #def get_flow(self, f1, f2, c1, c2, poly_n=41, w=5, num_iterations=3, flow=None, model="constant", mu=None):
-    #def get_flow(self, f1, f2, c1, c2, poly_window_length=4.0, w=5, num_iterations=3, flow=None, model="constant", mu=None):
-    #def get_flow(self, f1, f2, c1, c2, poly_window_length=4.0, sigma_flow=4.0, num_iterations=3, flow=None, model="constant", mu=None):
     def flow_iterative(
         self,
         f1, f2, c1, c2,
@@ -41,25 +36,24 @@ class Estimator:
         model="constant",
         mu=None
     ):
-
         """
         Calculates optical flow using only one level of the algorithm described by Gunnar Farneback
     
         Parameters
         ----------
         f1
-            First signal
+            First vol
         f2
-            Second signal
+            Second vol
         sigma
             Polynomial expansion applicability Gaussian kernel sigma
         c1
-            Certainty of first signal
+            Certainty of first vol
         c2
-            Certainty of second signal
+            Certainty of second vol
         sigma_flow
             Applicability window Gaussian kernel sigma for polynomial matching
-        num_iters
+        num_iterations
             Number of iterations to run (defaults to 1)
         flow: (optional)
             Initial displacement field
@@ -74,34 +68,38 @@ class Estimator:
         Returns
         -------
         flow
-            Optical flow field. flow[i] is the x displacement for sample i
+            Optical flow field. flow[i, j, k] is the (z, y, x) displacement for pixel (i, j, k)
         """
-
+    
         # TODO: add initial warp parameters as optional input?
-
-        # Calculate the polynomial expansion at each sample in the signals
-        #A1, B1, C1 = self.poly_expand(f1, c1, poly_n)
+    
+        # Calculate the polynomial expansion at each volxel in the volumes
         A1, B1, C1 = self.PE.poly_expand(f1, c1, sigma)
-        #A2, B2, C2 = self.poly_expand(f2, c2, poly_n)
         A2, B2, C2 = self.PE.poly_expand(f2, c2, sigma)
-
-        # Sample indexes in the signals
-        x = np.arange(f1.shape[0])[:, None].astype(int)
-        #print(x)
-
+    
+        # Voxel coordinates of each point in the vols
+        x = np.stack(
+            np.meshgrid(
+                np.arange(f1.shape[0]),
+                np.arange(f1.shape[1]),
+                np.arange(f1.shape[2]),
+                indexing='ij'
+            ),
+            axis=-1
+        ).astype(int)
+    
         # Initialize displacement field
         if flow is None:
-            flow = np.zeros(list(f1.shape) + [1])
+            flow = np.zeros(list(f1.shape) + [3])
     
         # Set up applicability convolution window
-        #sigma_flow = (w/2 - 1)/4
         n_flow = int(4 * sigma_flow + 1)
         xw = np.arange(-n_flow, n_flow + 1)
         app_conv_win = np.exp(-(xw**2) / (2 * sigma_flow**2))
     
         # Evaluate warp parametrization model at pixel coordinates
         if model == "constant":
-            S = np.eye(1)
+            S = np.eye(3)
     
         elif model in ("affine", "eight_param"):
             S = np.empty(list(x.shape) + [6 if model == "affine" else 8])
@@ -130,43 +128,42 @@ class Estimator:
         else:
             raise ValueError("Invalid parametrization model")
     
-        S_T = S.swapaxes(-1, -2) # Without effect in 1D
-
+        S_T = S.swapaxes(-1, -2)
+    
         # Iterate convolutions to estimate the optical flow
         for _ in range(num_iters):
-            # Set flow~ as displacement field fit to nearest pixel (and constrain to not
-            # being off image). Note we are setting certainty to 0 for points that
-            # would have been off-image had we not constrained them
+            # Set flow~ as displacement field fit to nearest voxel (and constrain to not
+            # being off vol). Note we are setting certainty to 0 for points that
+            # would have been off-vol had we not constrained them
             flow_ = flow.astype(int)
             x_ = x + flow_
     
             # x_ = np.maximum(np.minimum(x_, np.array(f1.shape) - 1), 0)
     
-            # Constrain d~ to be on-image, and find points that would have
-            # been off-image
+            # Constrain d~ to be on-vol, and find points that would have
+            # been off-vol
             x_2 = np.maximum(np.minimum(x_, np.array(f1.shape) - 1), 0)
             off_f = np.any(x_ != x_2, axis=-1)
             x_ = x_2
     
-            # Set certainty to 0 for off-image points
-            c_ = c1[x_[..., 0]]
+            # Set certainty to 0 for off-vol points
+            c_ = c1[x_[..., 0], x_[..., 1], x_[..., 2]]
             c_[off_f] = 0
     
             # Calculate A and delB for each point, according to paper
-            A = (A1 + A2[x_[..., 0]]) / 2  # Eq. 7.12 (see also Fig. 7.8)
-            #print(A1, A2)
+            A = (A1 + A2[x_[..., 0], x_[..., 1], x_[..., 2]]) / 2  # Eq. 7.12 (see also Fig. 7.8)
+    
             A *= c_[
                 ..., None, None
             ]  # recommendation in paper: add in certainty by applying to A and delB
     
-            #print(A.shape, d_[..., None].shape)
-            delB = -1 / 2 * (B2[x_[..., 0]] - B1) + (A @ flow_[..., None])[..., 0]
+            delB = -1 / 2 * (B2[x_[..., 0], x_[..., 1], x_[..., 2]] - B1) + (A @ flow_[..., None])[..., 0]
             delB *= c_[
                 ..., None
             ]  # recommendation in paper: add in certainty by applying to A and delB
     
             # Pre-calculate quantities recommended by paper
-            A_T = A.swapaxes(-1, -2) # Without effect in 1D
+            A_T = A.swapaxes(-1, -2)
             ATA = S_T @ A_T @ A @ S # G(x) in the thesis (see Fig. 7.8)
             ATb = (S_T @ A_T @ delB[..., None])[..., 0] # h(x) in the thesis (see Fig. 7.8)
             # btb = delB.swapaxes(-1, -2) @ delB
@@ -177,10 +174,12 @@ class Estimator:
                 # Apply separable cross-correlation to calculate linear equation
                 # for each pixel: G*d = h
                 G = scipy.ndimage.correlate1d(ATA, app_conv_win, axis=0, mode="constant", cval=0)
-                #G = scipy.ndimage.correlate1d(G, w, axis=1, mode="constant", cval=0)
+                G = scipy.ndimage.correlate1d(G, app_conv_win, axis=1, mode="constant", cval=0)
+                G = scipy.ndimage.correlate1d(G, app_conv_win, axis=2, mode="constant", cval=0)
     
                 h = scipy.ndimage.correlate1d(ATb, app_conv_win, axis=0, mode="constant", cval=0)
-                #h = scipy.ndimage.correlate1d(h, w, axis=1, mode="constant", cval=0)
+                h = scipy.ndimage.correlate1d(h, app_conv_win, axis=1, mode="constant", cval=0)
+                h = scipy.ndimage.correlate1d(h, app_conv_win, axis=2, mode="constant", cval=0)
     
                 flow = (S @ np.linalg.solve(G, h)[..., None])[..., 0]
     
@@ -188,8 +187,8 @@ class Estimator:
             # and "force" the background warp onto uncertain pixels
             else:
                 # Calculate global parametrized warp
-                G_avg = np.mean(ATA, axis=(0))
-                h_avg = np.mean(ATb, axis=(0))
+                G_avg = np.mean(ATA, axis=(0, 1, 2))
+                h_avg = np.mean(ATb, axis=(0, 1, 2))
                 p_avg = np.linalg.solve(G_avg, h_avg)
                 flow_avg = (S @ p_avg[..., None])[..., 0]
     
@@ -198,16 +197,18 @@ class Estimator:
                     mu = 1 / 2 * np.trace(G_avg)
     
                 # Apply separable cross-correlation to calculate linear equation
-                G = scipy.ndimage.correlate1d(A_T @ A, app_conv_win, axis=0, mode="constant", cval=0)
-                #G = scipy.ndimage.correlate1d(G, w, axis=1, mode="constant", cval=0)
+                G = scipy.ndimage.correlate1d(A_T @ A, w, axis=0, mode="constant", cval=0)
+                G = scipy.ndimage.correlate1d(G, w, axis=1, mode="constant", cval=0)
+                G = scipy.ndimage.correlate1d(G, w, axis=2, mode="constant", cval=0)
     
                 h = scipy.ndimage.correlate1d(
-                    (A_T @ delB[..., None])[..., 0], app_conv_win, axis=0, mode="constant", cval=0
+                    (A_T @ delB[..., None])[..., 0], w, axis=0, mode="constant", cval=0
                 )
-                #h = scipy.ndimage.correlate1d(h, w, axis=1, mode="constant", cval=0)
+                h = scipy.ndimage.correlate1d(h, w, axis=1, mode="constant", cval=0)
+                h = scipy.ndimage.correlate1d(h, w, axis=2, mode="constant", cval=0)
     
                 # Refine estimate of displacement field
-                flow = np.linalg.solve(G + mu * np.eye(1), h + mu * flow_avg)
+                flow = np.linalg.solve(G + mu * np.eye(3), h + mu * flow_avg)
     
         # TODO: return global displacement parameters and/or global displacement if mu != 0
     
@@ -218,17 +219,17 @@ class Estimator:
         f1, f2, c1, c2,
         flow=None,
         N_poly=N_POLY,
-        window_length=WINDOW_LENGTH,
+        window_side=WINDOW_SIDE,
         num_iterations=NUM_ITERATIONS,
         model="constant",
         mu=None
     ):
-
         sigma = (N_poly - 1)/4
-        sigma_flow = (window_length - 1)/4
+        sigma_flow = (window_side - 1)/4
         self.logger.debug(f"N_poly={N_poly} (sigma={sigma})")
-        self.logger.debug(f"window_length={window_length} (sigma_flow={sigma_flow})")
+        self.logger.debug(f"window_side={window_side}")
         self.logger.debug(f"num_iterations={num_iterations}")
+        self.logger.debug(f"sigma_flow={sigma_flow}")
         self.logger.debug(f"model={model}")
         self.logger.debug(f"mu={mu}")
         self.logger.debug(f"shape={f1.shape}")
@@ -246,18 +247,40 @@ class Estimator:
         target,
         reference,
         flow=None,
-        pyramid_levels=PYRAMID_LEVELS, 
-        window_length=WINDOW_LENGTH,
+        pyramid_levels=PYRAMID_LEVELS,
+        window_side=WINDOW_SIDE,
         num_iterations=NUM_ITERATIONS,
         N_poly=N_POLY,
         model="constant",
         mu=None): # target and reference double's
-        
-        self.logger.debug(f"pyramid_levels={pyramid_levels}")
 
-        c1 = np.ones_like(reference)
-        c2 = np.ones_like(target)
-        #c2 = c1
+        self.logger.info(f"pyramid_levels={pyramid_levels}")
+
+        # c1 = np.ones_like(target)
+        # c2 = np.ones_like(reference)
+    
+        # certainties for images - certainty is decreased for pixels near the edge
+        # of the image, as recommended by Farneback
+        c1 = np.minimum(
+            1, 1
+            / 5
+            * np.minimum(
+                np.arange(target.shape[0])[:, None],
+                np.arange(target.shape[1]),
+                np.arange(target.shape[2]),
+            ),
+        )
+        c1 = np.minimum(
+            c1,
+            1
+            / 5
+            * np.minimum(
+                target.shape[0] - 1 - np.arange(target.shape[0])[:, None],
+                target.shape[1] - 1 - np.arange(target.shape[1]),
+                target.shape[2] - 1 - np.arange(target.shape[2]),
+            ),
+        )
+        c2 = c1
     
         # ---------------------------------------------------------------
         # calculate optical flow with this algorithm
@@ -304,21 +327,19 @@ class Estimator:
             if flow is not None:
                 # TODO: account for shapes not quite matching
                 #d = skimage.transform.pyramid_expand(d, multichannel=True)
-                flow = pyramid_gaussian.expand_level(np.squeeze(flow))[:, None]
-                flow = flow[: pyr1.shape[0]]
+                flow = pyramid_gaussian.expand_level(flow)
+                flow = flow[: pyr1.shape[0], : pyr1.shape[1], : pyr1.shape[2]]
             self.logger.debug(f"np.max(pyr1)={np.max(pyr1)}")
             self.logger.debug(f"np.max(pyr2)={np.max(pyr2)}")
-            #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, poly_n=self.poly_n, w=self.w, num_iterations=self.num_iterations, **opts)
-            #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=self.sigma_poly, w=self.w, num_iterations=self.num_iterations, **opts)
-            #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=self.sigma_poly, sigma_flow=self.sigma_flow, num_iterations=self.num_iterations, **opts)
             flow = self.get_flow_iteration(
                 f1=pyr1, f2=pyr2, c1=c1_, c2=c2_,
                 flow=flow,
                 N_poly=N_poly,
-                window_length=window_length,
+                window_side=window_side,
                 num_iterations=num_iterations,
                 **opts)
-
+    
         #xw = d + np.moveaxis(np.indices(target.shape), 0, -1)
         #return xw
-        return flow
+        return flow[..., [2, 1, 0]] # (x, y) notation
+
