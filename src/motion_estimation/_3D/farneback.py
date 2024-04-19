@@ -26,7 +26,7 @@ class Estimator:
         self.logger = logger
         self.PE = polinomial_expansion.Polinomial_Expansion(logger)
 
-    def flow_iterative(
+    def __compute_flow_iteration(
         self,
         f1, f2, c1, c2,
         flow=None,
@@ -214,7 +214,7 @@ class Estimator:
     
         return flow
 
-    def get_flow_iteration(
+    def compute_flow_level(
         self,
         f1, f2, c1, c2,
         flow=None,
@@ -233,7 +233,7 @@ class Estimator:
         self.logger.debug(f"model={model}")
         self.logger.debug(f"mu={mu}")
         self.logger.debug(f"shape={f1.shape}")
-        return self.flow_iterative(
+        return self.__get_low_iteration(
             f1=f1, f2=f2, c1=c1, c2=c2,
             sigma=sigma,
             sigma_flow=sigma_flow,
@@ -242,7 +242,7 @@ class Estimator:
             model=model,
             mu=mu)
 
-    def pyramid_get_flow(
+    def compute_flow(
         self,
         target,
         reference,

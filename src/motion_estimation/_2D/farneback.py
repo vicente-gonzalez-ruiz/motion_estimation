@@ -1,5 +1,4 @@
-'''Farmeback's optical flow algorithm (2D). See
-https://docs.opencv.org/3.4/dc/d6b/group__video__track.html#ga5d10ebbd59fe09c5f650289ec0ece5af'''
+'''Farmeback's optical flow algorithm (2D).'''
 
 import logging
 #logger = logging.getLogger(__name__)
@@ -21,12 +20,11 @@ N_POLY = 5
 POLY_SIGMA = 1.2
 PYR_SCALE = 0.5
 
-class Estimator_in_CPU():
+class Estimator():
     
     def __init__(self,
                 logger):
         self.logger = logger
-        self.flags = 0
         '''
         self.pyr_levels = pyr_levels
         self.win_side = win_side
@@ -44,14 +42,6 @@ class Estimator_in_CPU():
     def get_times(self):
         return self.running_time
 
-    def use_previuos_flow(use=False):
-        if use:
-            self.flags |= cv2.OPTFLOW_USE_INITIAL_FLOW
-
-    def use_gaussian_applicability(use=False):
-        if use:
-            self.flags |= cv2.OPTFLOW_FARNEBACK_GAUSSIAN
-
     def pyramid_get_flow(
         self,
         target,
@@ -61,7 +51,7 @@ class Estimator_in_CPU():
         window_side=WINDOW_SIDE, # Applicability window side
         num_iterations=NUM_ITERATIONS, # Number of iterations at each pyramid level
         N_poly=N_POLY, # Standard deviation of the Gaussian basis used in the polynomial expansion
-    ):
+        flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN):
 
         if self.logger.getEffectiveLevel() <= logging.INFO:
             time_0 = time.perf_counter()
@@ -78,7 +68,7 @@ class Estimator_in_CPU():
             iterations=num_iterations,
             poly_n=N_poly,
             poly_sigma=sigma_poly,
-            flags=self.flags)
+            flags=flags)
 
         if self.logger.getEffectiveLevel() <= logging.INFO:
             time_1 = time.perf_counter()

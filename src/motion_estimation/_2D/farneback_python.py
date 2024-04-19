@@ -13,7 +13,7 @@ import logging
 #logger.setLevel(logging.INFO)
 #logger.setLevel(logging.DEBUG)
 from . import polinomial_expansion
-from . import pyramid_gaussian
+#from . import pyramid_gaussian
 
 PYRAMID_LEVELS = 1
 NUM_ITERATIONS = 1
@@ -23,15 +23,15 @@ N_POLY = 7
 class Estimator:
 
     def __init__(self, logger):
-        super().__init__(logger)
+        #super().__init__(logger)
         self.logger = logger
         self.PE = polinomial_expansion.Polinomial_Expansion(logger)
 
     def flow_iterative(
         self, f1, f2, c1, c2,
         flow=None,
-        sigma,
-        sigma_flow,
+        sigma=1.0,
+        sigma_flow=1.0,
         num_iter=NUM_ITERATIONS,
         model="constant",
         mu=None
