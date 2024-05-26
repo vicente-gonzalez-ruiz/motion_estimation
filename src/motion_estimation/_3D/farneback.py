@@ -1,26 +1,21 @@
-'''Farneback's optical flow algorithm (3D). See https://github.com/ericPrince/optical-flow'''
+'''Farneback's optical flow algorithm (3D) using well-known libraries. See https://github.com/ericPrince/optical-flow'''
 
 import numpy as np
 import scipy
 from functools import partial
 import skimage.transform
 import logging
-#logger = logging.getLogger(__name__)
-#logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
-#logger.setLevel(logging.CRITICAL)
-#logger.setLevel(logging.ERROR)
-#logger.setLevel(logging.WARNING)
-#logger.setLevel(logging.INFO)
-#logger.setLevel(logging.DEBUG)
 from . import polinomial_expansion
 from . import pyramid_gaussian
 
-PYRAMID_LEVELS = 1
-NUM_ITERATIONS = 1
-WINDOW_SIDE = 7
-N_POLY = 7
+PYRAMID_LEVELS = 3
+WINDOW_SIDE = 5
+ITERATIONS = 5
+N_POLY = 11
+#POLY_SIGMA = 1.2
+PYR_SCALE = 0.5
 
-class Estimator:
+class Farneback_Estimator:
 
     def __init__(self, logger):
         self.logger = logger
@@ -32,7 +27,7 @@ class Estimator:
         flow=None,
         sigma=4.0,
         sigma_flow=4.0,
-        num_iters=NUM_ITERATIONS,
+        num_iters=ITERATIONS,
         model="constant",
         mu=None
     ):
@@ -220,7 +215,7 @@ class Estimator:
         flow=None,
         N_poly=N_POLY,
         window_side=WINDOW_SIDE,
-        num_iterations=NUM_ITERATIONS,
+        num_iterations=ITERATIONS,
         model="constant",
         mu=None
     ):
@@ -249,7 +244,7 @@ class Estimator:
         flow=None,
         pyramid_levels=PYRAMID_LEVELS,
         window_side=WINDOW_SIDE,
-        num_iterations=NUM_ITERATIONS,
+        num_iterations=ITERATIONS,
         N_poly=N_POLY,
         model="constant",
         mu=None): # target and reference double's

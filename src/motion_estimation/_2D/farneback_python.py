@@ -32,7 +32,7 @@ class Estimator:
         flow=None,
         sigma=1.0,
         sigma_flow=1.0,
-        num_iter=NUM_ITERATIONS,
+        num_iterations=NUM_ITERATIONS,
         model="constant",
         mu=None
     ):
@@ -88,9 +88,9 @@ class Estimator:
             flow = np.zeros(list(f1.shape) + [2])
     
         # Set up applicability convolution window
-        n_flow = int(4 * self.sigma_flow + 1)
+        n_flow = int(4 * sigma_flow + 1)
         xw = np.arange(-n_flow, n_flow + 1)
-        w = np.exp(-(xw**2) / (2 * self.sigma_flow**2))
+        w = np.exp(-(xw**2) / (2 * sigma_flow**2))
     
         # Evaluate warp parametrization model at pixel coordinates
         if model == "constant":
@@ -126,7 +126,7 @@ class Estimator:
         S_T = S.swapaxes(-1, -2)
     
         # Iterate convolutions to estimate the optical flow
-        for _ in range(self.num_iterations):
+        for _ in range(num_iterations):
             # Set flow~ as displacement field fit to nearest pixel (and constrain to not
             # being off image). Note we are setting certainty to 0 for points that
             # would have been off-image had we not constrained them
@@ -216,6 +216,7 @@ class Estimator:
     ):
         sigma = (N_poly - 1)/4
         sigma_flow = (window_side - 1)/4
+
         self.logger.debug(f"N_poly={N_poly} (sigma={sigma})")
         self.logger.debug(f"window_side={window_side}")
         self.logger.debug(f"num_iterations={num_iterations}")
@@ -223,8 +224,12 @@ class Estimator:
         #self.logger.debug(f"w={w}")
         self.logger.debug(f"model={model}")
         self.logger.debug(f"mu={mu}")
+
         self.logger.debug(f"shape={f1.shape}")
-        return flow_iterative(self, f1, f2, c1, c2, sigma, sigma_flow, num_iterations, flow, model, mu)
+        return self.flow_iterative(
+            f1=f1, f2=f2, c1=c1, c2=c2,
+            flow=flow, sigma=sigma, sigma_flow=sigma_flow,
+            num_iterations=num_iterations, model=model, mu=mu)
 
     def pyramid_get_flow(
         self,
