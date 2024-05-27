@@ -2,13 +2,6 @@
 https://docs.opencv.org/3.4/dc/d6b/group__video__track.html#ga5d10ebbd59fe09c5f650289ec0ece5af'''
 
 import logging
-#logger = logging.getLogger(__name__)
-#logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
-#logger.setLevel(logging.CRITICAL)
-#logger.setLevel(logging.ERROR)
-#logger.setLevel(logging.WARNING)
-#logger.setLevel(logging.INFO)
-#logger.setLevel(logging.DEBUG)
 import time
 
 import cv2
@@ -16,41 +9,23 @@ import numpy as np
 
 PYRAMID_LEVELS = 3
 WINDOW_SIDE = 5
-NUM_ITERATIONS = 5
+ITERATIONS = 5
 N_POLY = 5
 POLY_SIGMA = 1.2
 PYR_SCALE = 0.5
 
-class Estimator_in_CPU():
+class OF_Estimation(logging.Logger):
     
-    def __init__(self,
-                logger):
-        self.logger = logger
-        self.flags = 0
-        '''
-        self.pyr_levels = pyr_levels
-        self.win_side = win_side
-        self.num_iters = num_iters
-        self.sigma_poly = sigma_poly
-        self.flags = flags
+    def __init__(
+        self,      
+        logging_level=logging.INFO
+    ):
+        self.logger = logging.getLogger(__name__)
+        #self.flags = 0
+        self.logger.setLevel(logging_level)
+        
         for attr, value in vars(self).items():
-            self.logger.info(f"{attr}: {value}")
-        '''
-
-        if logger.getEffectiveLevel() <= logging.INFO:
-            self.running_time = 0
-            self.total_running_time = 0
-
-    def get_times(self):
-        return self.running_time
-
-    def use_previuos_flow(use=False):
-        if use:
-            self.flags |= cv2.OPTFLOW_USE_INITIAL_FLOW
-
-    def use_gaussian_applicability(use=False):
-        if use:
-            self.flags |= cv2.OPTFLOW_FARNEBACK_GAUSSIAN
+            self.logger.debug(f"{attr}: {value}")
 
     def pyramid_get_flow(
         self,
@@ -58,45 +33,37 @@ class Estimator_in_CPU():
         reference,
         flow=None,
         pyramid_levels=PYRAMID_LEVELS, # Number of pyramid layers
-        window_side=WINDOW_SIDE, # Applicability window side
-        num_iterations=NUM_ITERATIONS, # Number of iterations at each pyramid level
-        N_poly=N_POLY, # Standard deviation of the Gaussian basis used in the polynomial expansion
+        window_side=WINDOW_SIDE,       # Applicability window side
+        iterations=ITERATIONS,         # Number of iterations at each pyramid level
+        N_poly=N_POLY,                 # Standard deviation of the Gaussian basis used in the polynomial expansion
+        flags=0                        # cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN
     ):
 
-        if self.logger.getEffectiveLevel() <= logging.INFO:
-            time_0 = time.perf_counter()
-
-        sigma_poly = (N_poly - 1)/4
+        sigma_poly = (N_poly - 1)/4 # Standard deviation of the Gaussian basis used in the polynomial expansion
         self.logger.debug(f"sigma_poly={sigma_poly}")
+        #print(target.shape, reference.shape, flow, target.dtype, reference.dtype)
         flow = cv2.calcOpticalFlowFarneback(
             prev=target,
             next=reference,
             flow=flow,
-            pyr_scale=PYR_SCALE, #self.pyr_scale,
+            pyr_scale=0.5,
             levels=pyramid_levels,
             winsize=window_side,
-            iterations=num_iterations,
+            iterations=iterations,
             poly_n=N_poly,
             poly_sigma=sigma_poly,
-            flags=self.flags)
-
-        if self.logger.getEffectiveLevel() <= logging.INFO:
-            time_1 = time.perf_counter()
-            last_running_time = time_1 - time_0
-            self.total_running_time += last_running_time
-
-        self.logger.debug(f"avg_OF={np.average(np.abs(flow)):4.2f}")
+            flags=flags)
 
         return flow
 
-class Estimator_in_GPU(Estimator_in_CPU):
+class Estimator_in_GPU(OF_Estimation):
 
     def __init__(self,
             levels=PYRAMID_LEVELS,
             #pyr_scale=PYR_SCALE,
             fast_pyramids=False,
             win_side=WINDOW_SIDE,
-            num_iterations=NUM_ITERATIONS,
+            num_iterations=ITERATIONS,
             sigma_poly=POLY_SIGMA,
             flags=cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN):
         super().__init(levels,
