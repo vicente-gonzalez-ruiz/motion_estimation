@@ -1,14 +1,6 @@
 '''Farneback's polinomial expansion (3D). See https://github.com/ericPrince/optical-flow'''
 
 import numpy as np
-#import logging
-#logger = logging.getLogger(__name__)
-#logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
-#logger.setLevel(logging.CRITICAL)
-#logger.setLevel(logging.ERROR)
-#logger.setLevel(logging.WARNING)
-#logger.setLevel(logging.INFO)
-#logger.setLevel(logging.DEBUG)
 import scipy
 
 class Polinomial_Expansion():
@@ -18,13 +10,15 @@ class Polinomial_Expansion():
 
     def poly_expand(self, f, c, sigma):
         """
-        Calculates the local polynomial expansion of a 2D signal, as described by Farneback
-        Uses separable normalized correlation
+        Calculates the local polynomial expansion of a 3D signal.
+        
         $f ~ x^T A x + B^T x + C$
-        If f[i, j] and c[i, j] are the signal value and certainty of pixel (i, j) then
-        A[i, j] is a 2x2 array representing the quadratic term of the polynomial, B[i, j]
+        
+        If f[i, j. k] and c[i, j, k] are the signal value and certainty of voxel (i, j, k) then
+        A[i, j, k] is a 3x3 array representing the quadratic term of the polynomial, B[i, j, k]
         is a 2-element array representing the linear term, and C[i, j] is a scalar
         representing the constant term.
+        
         Parameters
         ----------
         f
@@ -47,7 +41,7 @@ class Polinomial_Expansion():
         x = np.arange(-poly_n, poly_n + 1, dtype=np.int32)
         a = np.exp(-(x**2) / (2 * sigma**2))  # a: applicability kernel [n]
     
-        # b: calculate b from the paper. Calculate separately for X and Y dimensions
+        # b: calculate b from the paper. Calculate separately for X, Y and Z dimensions
         # [n, 6]
         def _1(a):
             return np.ones(a.shape)
@@ -69,7 +63,7 @@ class Polinomial_Expansion():
         ab = np.einsum("i,ij->ij", a, bx) # ab[i,j] = bx[i,j]*a[i] (multiply each row of "bx" by the corresponding element of "a")
         abb = np.einsum("ij,ik->ijk", ab, bx) # abb[i,j,k] = ab[i,j]*bx[j,k]
         
-        # Calculate G and v for each pixel with cross-correlation (axis 0)
+        # Calculate G and v for each voxel with cross-correlation (axis 0)
         #print("bx.shape[-1]", bx.shape[-1])
         for i in range(bx.shape[-1]):
             for j in range(bx.shape[-1]):
@@ -114,7 +108,34 @@ class Polinomial_Expansion():
     
         # Solve r for each pixel (eq. 4.8 of the thesis)
         r = np.linalg.solve(G, v)
-    
+
+        # Basis (see eq. 4.2 of the thesis):
+        # 1 x 1 1 x^2   1   1  x  x  1
+        # 1 1 y 1   1 y^2   1  y  1  y
+        # 1 1 1 z   1   1 z^2  1  z  z
+        # ----------------------------
+        # 1 x y z x^2 y^2 z^2 xy xz yz
+        
+        # (See eq. 4.4 of the thesis)
+        #
+        # (x y z) A (x y z)^T + b^T(x y z)^T + c =
+        # r1 + r_2x + r_3y + r_3z + r_5x^2 + r_6y^2 + r_yz^2 + r_8xy + r_9xz + r_10yz
+        #
+        # where
+        #
+        # c = r_1
+        #
+        # b = (r_1 r_2 r_3)^T
+        #
+        #     /   r_5  r_8/2  r_9/2 \
+        # A = | r_8/2    r_6 r_10/2 |
+        #     \ r_9/2 r_10/2    r_7 /
+        #
+        #
+        #        /  r_5  r_8/2  r_9/2 \ / x \   /  x^2r_5  xyr_8/2  xzr_9/2 \
+        # (x y z)| r_8/2    r_6 r_10/2 || y | = | xyr_8/2   y^2r_6 yzr_10/2 |
+        #        \ r_9/2 r_10/2    r_7 /\ z /   \ xzr_9/2 yzr_10/2   z^2r_7 /
+     
         # Quadratic term
         A = np.empty(list(f.shape) + [3, 3])
         A[..., 0, 0] = r[..., 4]

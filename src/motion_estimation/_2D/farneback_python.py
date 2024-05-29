@@ -5,18 +5,10 @@ import scipy
 from functools import partial
 import skimage.transform
 import logging
-#logger = logging.getLogger(__name__)
-#logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
-#logger.setLevel(logging.CRITICAL)
-#logger.setLevel(logging.ERROR)
-#logger.setLevel(logging.WARNING)
-#logger.setLevel(logging.INFO)
-#logger.setLevel(logging.DEBUG)
 from . import polinomial_expansion
-#from . import pyramid_gaussian
 
-PYRAMID_LEVELS = 1
-NUM_ITERATIONS = 1
+PYRAMID_LEVELS = 3
+ITERATIONS = 5
 WINDOW_SIDE = 7
 N_POLY = 7
 
@@ -32,7 +24,7 @@ class Estimator:
         flow=None,
         sigma=1.0,
         sigma_flow=1.0,
-        num_iterations=NUM_ITERATIONS,
+        num_iterations=ITERATIONS,
         model="constant",
         mu=None
     ):
@@ -210,7 +202,7 @@ class Estimator:
         flow=None,
         N_poly=N_POLY,
         window_side=WINDOW_SIDE,
-        num_iterations=NUM_ITERATIONS,
+        num_iterations=ITERATIONS,
         model="constant",
         mu=None
     ):
@@ -238,7 +230,7 @@ class Estimator:
         flow=None,
         pyramid_levels=PYRAMID_LEVELS,
         window_side=WINDOW_SIDE,
-        num_iterations=NUM_ITERATIONS,
+        num_iterations=ITERATIONS,
         N_poly=N_POLY,
         model="constant",
         mu=None): # target and reference double's

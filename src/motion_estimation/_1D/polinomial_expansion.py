@@ -2,13 +2,6 @@
 
 import numpy as np
 import logging
-#logger = logging.getLogger(__name__)
-#logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
-#logger.setLevel(logging.CRITICAL)
-#logger.setLevel(logging.ERROR)
-#logger.setLevel(logging.WARNING)
-#logger.setLevel(logging.INFO)
-#logger.setLevel(logging.DEBUG)
 import scipy
 
 class Polinomial_Expansion():
@@ -72,7 +65,7 @@ class Polinomial_Expansion():
         ab = np.einsum("i,ij->ij", a, b) # ab[i] = b[i]*a[i]
         abb = np.einsum("ij,ik->ijk", ab, b) # abb[i,j] = ab[i]*b[j]
     
-        # Calculate G and v for each pixel with cross-correlation
+        # Calculate G and v for each sample with cross-correlation
         for i in range(b.shape[-1]):
             for j in range(b.shape[-1]):
                 #print("G[..., i, j].shape", G[..., i, j].shape)

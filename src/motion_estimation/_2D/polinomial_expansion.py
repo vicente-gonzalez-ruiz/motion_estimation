@@ -1,14 +1,6 @@
 '''Farneback's polinomial expansion (2D). See https://github.com/ericPrince/optical-flow'''
 
 import numpy as np
-#import logging
-#logger = logging.getLogger(__name__)
-#logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
-#logger.setLevel(logging.CRITICAL)
-#logger.setLevel(logging.ERROR)
-#logger.setLevel(logging.WARNING)
-#logger.setLevel(logging.INFO)
-#logger.setLevel(logging.DEBUG)
 import scipy
 
 class Polinomial_Expansion():
@@ -20,11 +12,14 @@ class Polinomial_Expansion():
         """
         Calculates the local polynomial expansion of a 2D signal, as described by Farneback
         Uses separable normalized correlation
+        
         $f ~ x^T A x + B^T x + C$
+        
         If f[i, j] and c[i, j] are the signal value and certainty of pixel (i, j) then
         A[i, j] is a 2x2 array representing the quadratic term of the polynomial, B[i, j]
         is a 2-element array representing the linear term, and C[i, j] is a scalar
         representing the constant term.
+        
         Parameters
         ----------
         f
@@ -100,6 +95,12 @@ class Polinomial_Expansion():
     
         # Solve r for each pixel (eq. 4.8 of the thesis)
         r = np.linalg.solve(G, v)
+
+        # Basis (see eq. 4.2 of the thesis):
+        # 1 x 1 x^2   1   x 
+        # 1 1 y   1 y^2   y
+        # -----------------
+        # 1 x y x^2 y^2 xy
     
         # Quadratic term
         A = np.empty(list(f.shape) + [2, 2])
