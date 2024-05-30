@@ -19,11 +19,10 @@ PYRAMID_LEVELS = 1
 NUM_ITERATIONS = 1
 WINDOW_LENGTH = 17
 N_POLY = 17
+DOWN_SCALE = 2 # Only integers
 
 class Estimator:
 
-    #def __init__(self, pyr_levels=3, poly_n=41, w=5, num_iterations=3, verbosity=logging.INFO):
-    #def __init__(self, pyr_levels=3, poly_sigma=4.0, w=5, num_iterations=3, verbosity=logging.INFO):
     def __init__(self, logger):
         self.logger = logger
         self.PE = polinomial_expansion.Polinomial_Expansion(logger)

@@ -12,10 +12,9 @@ PYRAMID_LEVELS = 3
 WINDOW_SIDE = 5
 ITERATIONS = 5
 N_POLY = 11
-#POLY_SIGMA = 1.2
 PYR_SCALE = 0.5
 
-class Farneback_Estimator:
+class Estimator:
 
     def __init__(self, logger):
         self.logger = logger

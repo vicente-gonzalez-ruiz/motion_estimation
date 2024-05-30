@@ -11,6 +11,7 @@ PYRAMID_LEVELS = 3
 ITERATIONS = 5
 WINDOW_SIDE = 7
 N_POLY = 7
+DOWN_SCALE = 2 # Only integers
 
 class Estimator:
 
@@ -229,6 +230,7 @@ class Estimator:
         reference,
         flow=None,
         pyramid_levels=PYRAMID_LEVELS,
+        down_scale=DOWN_SCALE,
         window_side=WINDOW_SIDE,
         num_iterations=ITERATIONS,
         N_poly=N_POLY,
@@ -291,7 +293,7 @@ class Estimator:
                 zip(
                     *list(
                         map(
-                            partial(skimage.transform.pyramid_gaussian, max_layer=pyramid_levels),
+                            partial(skimage.transform.pyramid_gaussian, max_layer=pyramid_levels, downscale=down_scale),
                             [reference, target, c1, c2],
                         )
                     )
