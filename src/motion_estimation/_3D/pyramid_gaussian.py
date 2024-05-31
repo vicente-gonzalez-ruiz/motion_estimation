@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.ndimage import gaussian_filter
+from scipy.ndimage import zoom
 import logging
 
 DOWN_SCALE = 2 # Only integers
@@ -24,11 +25,14 @@ class Gaussian_Pyramid:
         #return pyramid
 
     def expand_level(self, volume, down_scale=DOWN_SCALE):
-        expanded_volume = np.zeros((volume.shape[0]*down_scale,
-                                    volume.shape[1]*down_scale,
-                                    volume.shape[2]*down_scale),
-                                   dtype=volume.dtype)
-        expanded_volume[::down_scale, ::down_scale, ::down_scale] = volume
-        sigma = 2 * down_scale / 6.0
-        smoothed_volume = gaussian_filter(expanded_volume, sigma=sigma)
-        return smoothed_volume
+        #expanded_volume = np.zeros((volume.shape[0]*down_scale,
+        #                            volume.shape[1]*down_scale,
+        #                            volume.shape[2]*down_scale),
+        #                           dtype=volume.dtype)
+        #expanded_volume[::down_scale, ::down_scale, ::down_scale] = volume
+        #sigma = 2 * down_scale / 6.0
+        #smoothed_volume = gaussian_filter(expanded_volume, sigma=sigma)
+        #return smoothed_volume
+        zoom_factors = (down_scale, down_scale, down_scale)
+        expanded_vol = zoom(volume, zoom_factors, order=1)  # order=1 for linear interpolation
+        return expanded_vol
