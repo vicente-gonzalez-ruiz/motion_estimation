@@ -5,38 +5,28 @@ import scipy
 from functools import partial
 import skimage.transform
 import logging
-#logger = logging.getLogger(__name__)
-#logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
-#logger.setLevel(logging.CRITICAL)
-#logger.setLevel(logging.ERROR)
-#logger.setLevel(logging.WARNING)
-#logger.setLevel(logging.INFO)
-#logger.setLevel(logging.DEBUG)
 from . import polinomial_expansion
 from . import pyramid_gaussian
 
 PYRAMID_LEVELS = 1
-NUM_ITERATIONS = 1
+ITERATIONS = 1
 WINDOW_LENGTH = 17
 N_POLY = 17
 DOWN_SCALE = 2 # Only integers
 
-class Estimator:
+class OF_Estimation:
 
-    def __init__(self, logger):
-        self.logger = logger
-        self.PE = polinomial_expansion.Polinomial_Expansion(logger)
+    def __init__(self, logging_level=logging.INFO):
+        self.logging_level = logging_level
+        self.PE = polinomial_expansion.Polinomial_Expansion(logging_level)
 
-    #def get_flow(self, f1, f2, c1, c2, poly_n=41, w=5, num_iterations=3, flow=None, model="constant", mu=None):
-    #def get_flow(self, f1, f2, c1, c2, poly_window_length=4.0, w=5, num_iterations=3, flow=None, model="constant", mu=None):
-    #def get_flow(self, f1, f2, c1, c2, poly_window_length=4.0, sigma_flow=4.0, num_iterations=3, flow=None, model="constant", mu=None):
     def flow_iterative(
         self,
         f1, f2, c1, c2,
         flow=None,
         sigma=4.0,
         sigma_flow=4.0,
-        num_iters=NUM_ITERATIONS,
+        iterations=ITERATIONS,
         model="constant",
         mu=None
     ):
@@ -58,7 +48,7 @@ class Estimator:
             Certainty of second signal
         sigma_flow
             Applicability window Gaussian kernel sigma for polynomial matching
-        num_iters
+        iterations
             Number of iterations to run (defaults to 1)
         flow: (optional)
             Initial displacement field
@@ -79,16 +69,14 @@ class Estimator:
         # TODO: add initial warp parameters as optional input?
 
         # Calculate the polynomial expansion at each sample in the signals
-        #A1, B1, C1 = self.poly_expand(f1, c1, poly_n)
         A1, B1, C1 = self.PE.poly_expand(f1, c1, sigma)
-        #A2, B2, C2 = self.poly_expand(f2, c2, poly_n)
         A2, B2, C2 = self.PE.poly_expand(f2, c2, sigma)
 
         # Sample indexes in the signals
         x = np.arange(f1.shape[0])[:, None].astype(int)
         #print(x)
 
-        # Initialize displacement field
+        # Initialize the displacements field
         if flow is None:
             flow = np.zeros(list(f1.shape) + [1])
     
@@ -132,7 +120,7 @@ class Estimator:
         S_T = S.swapaxes(-1, -2) # Without effect in 1D
 
         # Iterate convolutions to estimate the optical flow
-        for _ in range(num_iters):
+        for _ in range(iterations):
             # Set flow~ as displacement field fit to nearest pixel (and constrain to not
             # being off image). Note we are setting certainty to 0 for points that
             # would have been off-image had we not constrained them
@@ -218,25 +206,17 @@ class Estimator:
         flow=None,
         N_poly=N_POLY,
         window_length=WINDOW_LENGTH,
-        num_iterations=NUM_ITERATIONS,
+        iterations=ITERATIONS,
         model="constant",
         mu=None
     ):
 
         sigma = (N_poly - 1)/4
         sigma_flow = (window_length - 1)/4
-        self.logger.debug(f"N_poly={N_poly} (sigma={sigma})")
-        self.logger.debug(f"window_length={window_length} (sigma_flow={sigma_flow})")
-        self.logger.debug(f"num_iterations={num_iterations}")
-        self.logger.debug(f"model={model}")
-        self.logger.debug(f"mu={mu}")
-        self.logger.debug(f"shape={f1.shape}")
         return self.flow_iterative(
             f1=f1, f2=f2, c1=c1, c2=c2,
-            sigma=sigma,
-            sigma_flow=sigma_flow,
-            num_iter=num_iterations,
-            flow=flow,
+            flow=flow, sigma=sigma, sigma_flow=sigma_flow,
+            iterations=iterations,
             model=model,
             mu=mu)
 
@@ -246,13 +226,12 @@ class Estimator:
         reference,
         flow=None,
         pyramid_levels=PYRAMID_LEVELS, 
+        down_scale=DOWN_SCALE,
         window_length=WINDOW_LENGTH,
-        num_iterations=NUM_ITERATIONS,
+        iterations=NUM_ITERATIONS,
         N_poly=N_POLY,
         model="constant",
         mu=None): # target and reference double's
-        
-        self.logger.debug(f"pyramid_levels={pyramid_levels}")
 
         c1 = np.ones_like(reference)
         c2 = np.ones_like(target)
@@ -293,7 +272,9 @@ class Estimator:
                 zip(
                     *list(
                         map(
-                            partial(pyramid_gaussian.get_pyramid, num_levels=pyramid_levels),
+                            partial(pyramid_gaussian.get_pyramid,
+                                    num_levels=pyramid_levels,
+                                    down_scale=down_scale),
                             [reference, target, c1, c2],
                         )
                     )
@@ -305,17 +286,13 @@ class Estimator:
                 #d = skimage.transform.pyramid_expand(d, multichannel=True)
                 flow = pyramid_gaussian.expand_level(np.squeeze(flow))[:, None]
                 flow = flow[: pyr1.shape[0]]
-            self.logger.debug(f"np.max(pyr1)={np.max(pyr1)}")
-            self.logger.debug(f"np.max(pyr2)={np.max(pyr2)}")
-            #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, poly_n=self.poly_n, w=self.w, num_iterations=self.num_iterations, **opts)
-            #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=self.sigma_poly, w=self.w, num_iterations=self.num_iterations, **opts)
-            #flow = self.get_flow(pyr1, pyr2, c1=c1_, c2=c2_, flow=flow, sigma_poly=self.sigma_poly, sigma_flow=self.sigma_flow, num_iterations=self.num_iterations, **opts)
+
             flow = self.get_flow_iteration(
                 f1=pyr1, f2=pyr2, c1=c1_, c2=c2_,
                 flow=flow,
                 N_poly=N_poly,
                 window_length=window_length,
-                num_iterations=num_iterations,
+                iterations=iterations,
                 **opts)
 
         #xw = d + np.moveaxis(np.indices(target.shape), 0, -1)

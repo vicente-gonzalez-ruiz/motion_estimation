@@ -12,21 +12,22 @@ PYRAMID_LEVELS = 3
 WINDOW_SIDE = 5
 ITERATIONS = 5
 N_POLY = 11
-PYR_SCALE = 0.5
+#PYR_SCALE = 0.5
+DOWN_SCALE = 2 # Only integers
 
-class Estimator:
+class OF_Estimation:
 
-    def __init__(self, logger):
-        self.logger = logger
-        self.PE = polinomial_expansion.Polinomial_Expansion(logger)
+    def __init__(self, logging_level=logging.INFO):
+        self.logging_level = logging_level
+        self.PE = polinomial_expansion.Polinomial_Expansion(logging_level)
 
-    def __compute_flow_iteration(
+    def flow_iterative(
         self,
         f1, f2, c1, c2,
         flow=None,
-        sigma=4.0,
-        sigma_flow=4.0,
-        num_iters=ITERATIONS,
+        sigma=1.0,
+        sigma_flow=1.0,
+        iterations=ITERATIONS,
         model="constant",
         mu=None
     ):
@@ -47,7 +48,7 @@ class Estimator:
             Certainty of second vol
         sigma_flow
             Applicability window Gaussian kernel sigma for polynomial matching
-        num_iterations
+        iterations
             Number of iterations to run (defaults to 1)
         flow: (optional)
             Initial displacement field
@@ -82,7 +83,7 @@ class Estimator:
             axis=-1
         ).astype(int)
     
-        # Initialize displacement field
+        # Initialize the displacements field
         if flow is None:
             flow = np.zeros(list(f1.shape) + [3])
     
@@ -125,7 +126,7 @@ class Estimator:
         S_T = S.swapaxes(-1, -2)
     
         # Iterate convolutions to estimate the optical flow
-        for _ in range(num_iters):
+        for _ in range(iterations):
             # Set flow~ as displacement field fit to nearest voxel (and constrain to not
             # being off vol). Note we are setting certainty to 0 for points that
             # would have been off-vol had we not constrained them
@@ -191,15 +192,15 @@ class Estimator:
                     mu = 1 / 2 * np.trace(G_avg)
     
                 # Apply separable cross-correlation to calculate linear equation
-                G = scipy.ndimage.correlate1d(A_T @ A, w, axis=0, mode="constant", cval=0)
-                G = scipy.ndimage.correlate1d(G, w, axis=1, mode="constant", cval=0)
-                G = scipy.ndimage.correlate1d(G, w, axis=2, mode="constant", cval=0)
+                G = scipy.ndimage.correlate1d(A_T @ A, app_conv_win, axis=0, mode="constant", cval=0)
+                G = scipy.ndimage.correlate1d(G, app_conv_win, axis=1, mode="constant", cval=0)
+                G = scipy.ndimage.correlate1d(G, app_conv_win, axis=2, mode="constant", cval=0)
     
                 h = scipy.ndimage.correlate1d(
-                    (A_T @ delB[..., None])[..., 0], w, axis=0, mode="constant", cval=0
+                    (A_T @ delB[..., None])[..., 0], app_conv_win, axis=0, mode="constant", cval=0
                 )
-                h = scipy.ndimage.correlate1d(h, w, axis=1, mode="constant", cval=0)
-                h = scipy.ndimage.correlate1d(h, w, axis=2, mode="constant", cval=0)
+                h = scipy.ndimage.correlate1d(h, app_conv_win, axis=1, mode="constant", cval=0)
+                h = scipy.ndimage.correlate1d(h, app_conv_win, axis=2, mode="constant", cval=0)
     
                 # Refine estimate of displacement field
                 flow = np.linalg.solve(G + mu * np.eye(3), h + mu * flow_avg)
@@ -208,47 +209,37 @@ class Estimator:
     
         return flow
 
-    def compute_flow_level(
+    def get_flow_iteration(
         self,
         f1, f2, c1, c2,
         flow=None,
         N_poly=N_POLY,
         window_side=WINDOW_SIDE,
-        num_iterations=ITERATIONS,
+        iterations=ITERATIONS,
         model="constant",
         mu=None
     ):
         sigma = (N_poly - 1)/4
         sigma_flow = (window_side - 1)/4
-        self.logger.debug(f"N_poly={N_poly} (sigma={sigma})")
-        self.logger.debug(f"window_side={window_side}")
-        self.logger.debug(f"num_iterations={num_iterations}")
-        self.logger.debug(f"sigma_flow={sigma_flow}")
-        self.logger.debug(f"model={model}")
-        self.logger.debug(f"mu={mu}")
-        self.logger.debug(f"shape={f1.shape}")
-        return self.__get_low_iteration(
+        return self.flow_iterative(
             f1=f1, f2=f2, c1=c1, c2=c2,
-            sigma=sigma,
-            sigma_flow=sigma_flow,
-            num_iter=num_iterations,
-            flow=flow,
+            flow=flow, sigma=sigma, sigma_flow=sigma_flow,
+            iterations=iterations,
             model=model,
             mu=mu)
 
-    def compute_flow(
+    def pyramid_get_flow(
         self,
         target,
         reference,
         flow=None,
         pyramid_levels=PYRAMID_LEVELS,
+        down_scale=DOWN_SCALE,
         window_side=WINDOW_SIDE,
-        num_iterations=ITERATIONS,
+        iterations=ITERATIONS,
         N_poly=N_POLY,
         model="constant",
         mu=None): # target and reference double's
-
-        self.logger.info(f"pyramid_levels={pyramid_levels}")
 
         # c1 = np.ones_like(target)
         # c2 = np.ones_like(reference)
@@ -311,7 +302,9 @@ class Estimator:
                 zip(
                     *list(
                         map(
-                            partial(pyramid_gaussian.get_pyramid, num_levels=pyramid_levels),
+                            partial(pyramid_gaussian.get_pyramid,
+                                    num_levels=pyramid_levels,
+                                    down_scale=down_scale),
                             [reference, target, c1, c2],
                         )
                     )
@@ -323,17 +316,16 @@ class Estimator:
                 #d = skimage.transform.pyramid_expand(d, multichannel=True)
                 flow = pyramid_gaussian.expand_level(flow)
                 flow = flow[: pyr1.shape[0], : pyr1.shape[1], : pyr1.shape[2]]
-            self.logger.debug(f"np.max(pyr1)={np.max(pyr1)}")
-            self.logger.debug(f"np.max(pyr2)={np.max(pyr2)}")
+
             flow = self.get_flow_iteration(
                 f1=pyr1, f2=pyr2, c1=c1_, c2=c2_,
                 flow=flow,
                 N_poly=N_poly,
                 window_side=window_side,
-                num_iterations=num_iterations,
+                iterations=iterations,
                 **opts)
     
         #xw = d + np.moveaxis(np.indices(target.shape), 0, -1)
         #return xw
-        return flow[..., [2, 1, 0]] # (x, y) notation
+        return flow[..., [2, 1, 0]] # (x, y, z) notation
 

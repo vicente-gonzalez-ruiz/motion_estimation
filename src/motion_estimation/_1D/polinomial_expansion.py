@@ -6,8 +6,8 @@ import scipy
 
 class Polinomial_Expansion():
 
-    def __init__(self, logger):
-        self.logger = logger
+    def __init__(self, logging_level=logging.INFO):
+        self.logging_level = logging_level
 
     def poly_expand(self, f, c, sigma):
     #def poly_expand(self, f, c, poly_n):
