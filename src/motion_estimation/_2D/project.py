@@ -4,7 +4,7 @@ import logging
 import cv2
 import numpy as np
 
-class Slice_Projection():
+class Projection():
     
     def __init__(
         self,

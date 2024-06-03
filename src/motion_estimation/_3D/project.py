@@ -4,7 +4,7 @@ import logging
 import numpy as np
 from scipy.ndimage import map_coordinates
 
-class Volume_Projection():
+class Projection():
     
     def __init__(
         self,

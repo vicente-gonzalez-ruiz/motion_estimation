@@ -4,7 +4,7 @@ import logging
 import numpy as np
 from scipy.interpolate import interp1d
 
-class Slice_Projection():
+class Projection():
     
     def __init__(
         self,

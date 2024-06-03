@@ -5,6 +5,8 @@ import scipy
 from functools import partial
 import skimage.transform
 import logging
+#from polinomial_expansion import Polinomial_Expansion
+#from pyramid_gaussian import Gaussian_Pyramid
 from . import polinomial_expansion
 from . import pyramid_gaussian
 
@@ -14,11 +16,12 @@ WINDOW_LENGTH = 17
 N_POLY = 17
 DOWN_SCALE = 2 # Only integers
 
-class OF_Estimation:
+class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.Gaussian_Pyramid):
 
     def __init__(self, logging_level=logging.INFO):
         self.logging_level = logging_level
-        self.PE = polinomial_expansion.Polinomial_Expansion(logging_level)
+        #self.PE = polinomial_expansion.Polinomial_Expansion(logging_level)
+        #self.gaussian_pyramid = pyramid_gaussian.Gaussian_Pyramid()
 
     def flow_iterative(
         self,
@@ -69,8 +72,8 @@ class OF_Estimation:
         # TODO: add initial warp parameters as optional input?
 
         # Calculate the polynomial expansion at each sample in the signals
-        A1, B1, C1 = self.PE.poly_expand(f1, c1, sigma)
-        A2, B2, C2 = self.PE.poly_expand(f2, c2, sigma)
+        A1, B1, C1 = self.poly_expand(f1, c1, sigma)
+        A2, B2, C2 = self.poly_expand(f2, c2, sigma)
 
         # Sample indexes in the signals
         x = np.arange(f1.shape[0])[:, None].astype(int)
@@ -228,7 +231,7 @@ class OF_Estimation:
         pyramid_levels=PYRAMID_LEVELS, 
         down_scale=DOWN_SCALE,
         window_length=WINDOW_LENGTH,
-        iterations=NUM_ITERATIONS,
+        iterations=ITERATIONS,
         N_poly=N_POLY,
         model="constant",
         mu=None): # target and reference double's
@@ -272,7 +275,7 @@ class OF_Estimation:
                 zip(
                     *list(
                         map(
-                            partial(pyramid_gaussian.get_pyramid,
+                            partial(self.get_pyramid,
                                     num_levels=pyramid_levels,
                                     down_scale=down_scale),
                             [reference, target, c1, c2],
@@ -284,7 +287,7 @@ class OF_Estimation:
             if flow is not None:
                 # TODO: account for shapes not quite matching
                 #d = skimage.transform.pyramid_expand(d, multichannel=True)
-                flow = pyramid_gaussian.expand_level(np.squeeze(flow))[:, None]
+                flow = self.expand_level(np.squeeze(flow))[:, None]
                 flow = flow[: pyr1.shape[0]]
 
             flow = self.get_flow_iteration(
