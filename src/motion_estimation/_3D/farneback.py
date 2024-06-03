@@ -8,6 +8,8 @@ import logging
 from . import polinomial_expansion
 from . import pyramid_gaussian
 
+import inspect
+
 PYRAMID_LEVELS = 3
 WINDOW_SIDE = 5
 ITERATIONS = 5
@@ -15,11 +17,14 @@ N_POLY = 11
 #PYR_SCALE = 0.5
 DOWN_SCALE = 2 # Only integers
 
-class OF_Estimation:
+class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.Gaussian_Pyramid):
 
     def __init__(self, logging_level=logging.INFO):
         self.logging_level = logging_level
-        self.PE = polinomial_expansion.Polinomial_Expansion(logging_level)
+        #logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.WARNING)
+        #self.PE = polinomial_expansion.Polinomial_Expansion(logging_level)
 
     def flow_iterative(
         self,
@@ -69,8 +74,8 @@ class OF_Estimation:
         # TODO: add initial warp parameters as optional input?
     
         # Calculate the polynomial expansion at each volxel in the volumes
-        A1, B1, C1 = self.PE.poly_expand(f1, c1, sigma)
-        A2, B2, C2 = self.PE.poly_expand(f2, c2, sigma)
+        A1, B1, C1 = self.poly_expand(f1, c1, sigma)
+        A2, B2, C2 = self.poly_expand(f2, c2, sigma)
     
         # Voxel coordinates of each point in the vols
         x = np.stack(
@@ -241,29 +246,40 @@ class OF_Estimation:
         model="constant",
         mu=None): # target and reference double's
 
+        print(self.logging_level)
+        if self.logging_level <= logging.INFO:
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                #self.logger.debug(f"{arg}: {values[arg]}")
+                print(f"{arg}: {values[arg]}")
+            print("target.shape:", target.shape)
+            print("reference.shape:", reference.shape)
+
         # c1 = np.ones_like(target)
         # c2 = np.ones_like(reference)
     
         # certainties for images - certainty is decreased for pixels near the edge
-        # of the image, as recommended by Farneback
+        # of the volume, as recommended by Farneback
+
         c1 = np.minimum(
-            1, 1
-            / 5
-            * np.minimum(
-                np.arange(target.shape[0])[:, None],
-                np.arange(target.shape[1]),
-                np.arange(target.shape[2]),
-            ),
+            1, 1/5 * np.minimum(
+                np.minimum(
+                    np.arange(target.shape[0])[:, None, None],
+                    np.arange(target.shape[1])[None, :, None]
+                ),
+                np.arange(target.shape[2])[None, None, :]
+            )
         )
+        
         c1 = np.minimum(
             c1,
-            1
-            / 5
-            * np.minimum(
-                target.shape[0] - 1 - np.arange(target.shape[0])[:, None],
-                target.shape[1] - 1 - np.arange(target.shape[1]),
-                target.shape[2] - 1 - np.arange(target.shape[2]),
-            ),
+            1/5 * np.minimum(
+                np.minimum(
+                    target.shape[0] - 1 - np.arange(target.shape[0])[:, None, None],
+                    target.shape[1] - 1 - np.arange(target.shape[1])[None, :, None]
+                ),
+                target.shape[2] - 1 - np.arange(target.shape[2])[None, None, :]
+            )
         )
         c2 = c1
     
@@ -302,7 +318,7 @@ class OF_Estimation:
                 zip(
                     *list(
                         map(
-                            partial(pyramid_gaussian.get_pyramid,
+                            partial(self.get_pyramid,
                                     num_levels=pyramid_levels,
                                     down_scale=down_scale),
                             [reference, target, c1, c2],
@@ -314,7 +330,7 @@ class OF_Estimation:
             if flow is not None:
                 # TODO: account for shapes not quite matching
                 #d = skimage.transform.pyramid_expand(d, multichannel=True)
-                flow = pyramid_gaussian.expand_level(flow)
+                flow = self.expand_level(flow)
                 flow = flow[: pyr1.shape[0], : pyr1.shape[1], : pyr1.shape[2]]
 
             flow = self.get_flow_iteration(

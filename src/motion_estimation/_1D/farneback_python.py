@@ -20,6 +20,9 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
 
     def __init__(self, logging_level=logging.INFO):
         self.logging_level = logging_level
+        #logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.WARNING)
         #self.PE = polinomial_expansion.Polinomial_Expansion(logging_level)
         #self.gaussian_pyramid = pyramid_gaussian.Gaussian_Pyramid()
 
