@@ -23,8 +23,10 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
         self.logging_level = logging_level
         #logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
         self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.WARNING)
+        self.logger.setLevel(logging_level)
         #self.PE = polinomial_expansion.Polinomial_Expansion(logging_level)
+        polinomial_expansion.Polinomial_Expansion.__init__(self, logging_level)
+        pyramid_gaussian.Gaussian_Pyramid.__init__(self, logging_level)
 
     def flow_iterative(
         self,

@@ -2,12 +2,16 @@
 
 import numpy as np
 import scipy
+import logging
+import inspect
 
 class Polinomial_Expansion():
 
-    def __init__(self, logger):
-        self.logger = logger
-
+    def __init__(self, logging_level=logging.INFO):
+        self.logging_level = logging_level
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging_level)
+        
     def poly_expand(self, f, c, sigma):
         """
         Calculates the local polynomial expansion of a 3D signal.
@@ -36,6 +40,19 @@ class Polinomial_Expansion():
         C
             Constant term of polynomial expansion
         """
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.stack()[1].function}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+
+        print("-------------------------------------", self.logging_level)
+                    
         # Calculate applicability kernel (1D because it is separable)
         poly_n = int(4 * sigma + 1)
         x = np.arange(-poly_n, poly_n + 1, dtype=np.int32)
