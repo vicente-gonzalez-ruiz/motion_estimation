@@ -70,6 +70,16 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
         flow
             Optical flow field. flow[i, j, k] is the (z, y, x) displacement for pixel (i, j, k)
         """
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.stack()[1].function}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
     
         # TODO: add initial warp parameters as optional input?
     
@@ -224,6 +234,17 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
         model="constant",
         mu=None
     ):
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.stack()[1].function}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+
         sigma = (N_poly - 1)/4
         sigma_flow = (window_side - 1)/4
         return self.flow_iterative(
@@ -246,14 +267,15 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
         model="constant",
         mu=None): # target and reference double's
 
-        print(self.logging_level)
         if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.stack()[1].function}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
-                #self.logger.debug(f"{arg}: {values[arg]}")
-                print(f"{arg}: {values[arg]}")
-            print("target.shape:", target.shape)
-            print("reference.shape:", reference.shape)
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
 
         # c1 = np.ones_like(target)
         # c2 = np.ones_like(reference)
@@ -330,8 +352,17 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
             if flow is not None:
                 # TODO: account for shapes not quite matching
                 #d = skimage.transform.pyramid_expand(d, multichannel=True)
-                flow = self.expand_level(flow)
-                flow = flow[: pyr1.shape[0], : pyr1.shape[1], : pyr1.shape[2]]
+                expanded_Z_flow = 2*self.expand_level(flow[..., 0])
+                expanded_Y_flow = 2*self.expand_level(flow[..., 1])
+                expanded_X_flow = 2*self.expand_level(flow[..., 2])
+                print("pyr1.shape:", pyr1.shape)
+                print("flow.shape:", flow.shape)
+                flow = np.empty(shape=(pyr1.shape[0], pyr1.shape[1], pyr1.shape[2], 3))
+                flow[..., 0] = expanded_Z_flow
+                flow[..., 1] = expanded_Y_flow
+                flow[..., 2] = expanded_X_flow
+                #flow = self.expand_level(flow)
+                #flow = flow[: pyr1.shape[0], : pyr1.shape[1], : pyr1.shape[2]]
 
             flow = self.get_flow_iteration(
                 f1=pyr1, f2=pyr2, c1=c1_, c2=c2_,

@@ -2,6 +2,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter
 from scipy.ndimage import zoom
 import logging
+import inspect
 
 DOWN_SCALE = 2 # Only integers
 NUM_LEVELS = 3
@@ -13,6 +14,17 @@ class Gaussian_Pyramid:
         self.logger.setLevel(logging_level)
 
     def get_pyramid(self, volume, num_levels, down_scale=DOWN_SCALE):
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.stack()[1].function}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+
         yield volume
         sigma = 2 * down_scale / 6.0
         #pyramid = [volume]
@@ -25,6 +37,17 @@ class Gaussian_Pyramid:
         #return pyramid
 
     def expand_level(self, volume, down_scale=DOWN_SCALE):
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.stack()[1].function}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+
         #expanded_volume = np.zeros((volume.shape[0]*down_scale,
         #                            volume.shape[1]*down_scale,
         #                            volume.shape[2]*down_scale),
