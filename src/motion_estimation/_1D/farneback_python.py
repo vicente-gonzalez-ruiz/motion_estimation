@@ -72,6 +72,16 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
             Optical flow field. flow[i] is the x displacement for sample i
         """
 
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+                    
         # TODO: add initial warp parameters as optional input?
 
         # Calculate the polynomial expansion at each sample in the signals
@@ -217,6 +227,16 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
         mu=None
     ):
 
+       if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+
         sigma = (N_poly - 1)/4
         sigma_flow = (window_length - 1)/4
         return self.flow_iterative(
@@ -238,6 +258,16 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
         N_poly=N_POLY,
         model="constant",
         mu=None): # target and reference double's
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
 
         c1 = np.ones_like(reference)
         c2 = np.ones_like(target)

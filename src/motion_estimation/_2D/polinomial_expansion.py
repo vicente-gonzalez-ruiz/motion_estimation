@@ -2,11 +2,15 @@
 
 import numpy as np
 import scipy
+import logging
+import inspect
 
 class Polinomial_Expansion():
 
-    def __init__(self, logger):
-        self.logger = logger
+    def __init__(self, logging_level):
+        self.logging_level = logging_level
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging_level)
 
     def poly_expand(self, f, c, sigma):
         """
@@ -37,6 +41,17 @@ class Polinomial_Expansion():
         C
             Constant term of polynomial expansion
         """
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+
         # Calculate applicability kernel (1D because it is separable)
         poly_n = int(4 * sigma + 1)
         x = np.arange(-poly_n, poly_n + 1, dtype=np.int32)
@@ -94,6 +109,8 @@ class Polinomial_Expansion():
             )
     
         # Solve r for each pixel (eq. 4.8 of the thesis)
+        print("G.shape", G.shape)
+        print("v.shape", v.shape)
         r = np.linalg.solve(G, v)
 
         # Basis (see eq. 4.2 of the thesis):
@@ -120,5 +137,16 @@ class Polinomial_Expansion():
         return A, B, C
 
     def expand(self, f, c, window_side):
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+
         sigma = (window_side - 1)/4
         return self.poly_expand(f, c, sigma)

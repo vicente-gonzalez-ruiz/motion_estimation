@@ -13,6 +13,17 @@ class Gaussian_Pyramid:
         self.logger.setLevel(logging_level)
 
     def filter(self, signal, sigma):
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+
         # Create a 1D Gaussian kernel
         kernel_size = int(6 * sigma + 1)
         if kernel_size % 2 == 0:
@@ -27,10 +38,32 @@ class Gaussian_Pyramid:
         return smoothed_signal
 
     def downsample(self, signal, down_scale=DOWN_SCALE):
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+
         # Downsampling by taking every second (in general DOWN_SCALE-nd) element
         return signal[::down_scale]
 
     def get_pyramid(self, signal, num_levels=NUM_LEVELS, down_scale=DOWN_SCALE):
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+
         yield signal # Return the original signal, also
         sigma = 2 * down_scale / 6.0
         for level in range(num_levels):
@@ -48,6 +81,17 @@ class Gaussian_Pyramid:
     '''
 
     def expand_level(self, signal, down_scale=DOWN_SCALE):
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+
         #print(level.shape)
         x = np.arange(len(signal))
         xnew = np.linspace(0, len(signal), num=len(x)*down_scale)

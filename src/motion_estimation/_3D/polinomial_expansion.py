@@ -4,6 +4,8 @@ import numpy as np
 import scipy
 import logging
 import inspect
+#from scipy.linalg import lstsq
+#from scipy.optimize import least_squares
 
 class Polinomial_Expansion():
 
@@ -42,7 +44,7 @@ class Polinomial_Expansion():
         """
 
         if self.logging_level <= logging.INFO:
-            print(f"\nFunction: {inspect.stack()[1].function}")
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
                 if isinstance(values[arg], np.ndarray):
@@ -50,8 +52,6 @@ class Polinomial_Expansion():
                     print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
                 else:
                     print(f"{arg}: {values[arg]}")
-
-        print("-------------------------------------", self.logging_level)
                     
         # Calculate applicability kernel (1D because it is separable)
         poly_n = int(4 * sigma + 1)
@@ -97,7 +97,7 @@ class Polinomial_Expansion():
         ab = np.einsum("i,ij->ij", a, by)
         abb = np.einsum("ij,ik->ijk", ab, by)
     
-        # Calculate G and v for each pixel with cross-correlation (axis 1)
+        # Calculate G and v for each voxel with cross-correlation (axis 1)
         for i in range(bx.shape[-1]):
             for j in range(bx.shape[-1]):
                 G[..., i, j] = scipy.ndimage.correlate1d(
@@ -112,7 +112,7 @@ class Polinomial_Expansion():
         ab = np.einsum("i,ij->ij", a, bz)
         abb = np.einsum("ij,ik->ijk", ab, bz)
     
-        # Calculate G and v for each pixel with cross-correlation (axis 1)
+        # Calculate G and v for each voxel with cross-correlation (axis 1)
         for i in range(bx.shape[-1]):
             for j in range(bx.shape[-1]):
                 G[..., i, j] = scipy.ndimage.correlate1d(
@@ -123,8 +123,16 @@ class Polinomial_Expansion():
                 v[..., i], ab[..., i], axis=1, mode="constant", cval=0
             )
     
-        # Solve r for each pixel (eq. 4.8 of the thesis)
-        r = np.linalg.solve(G, v)
+        # Solve r for each voxel (eq. 4.8 of the thesis)
+        print("G.shape", G.shape)
+        print("v.shape", v.shape)
+        try:
+            r = np.linalg.solve(G, v)
+        except np.linalg.LinAlgError:
+            _G = G.reshape(G.shape[0] * G.shape[1], G.shape[2] * G.shape[3] * G.shape[4])
+            _v = v.reshape(v.shape[0] * v.shape[1], v.shape[2] * v.shape[3])
+            _r = np.linalg.lstsq(_G, _v, rcond=None)[0]
+            r = _r.reshape(list(f.shape) + [10])
 
         # Basis (see eq. 4.2 of the thesis):
         # 1 x 1 1 x^2   1   1  x  x  1
@@ -177,5 +185,16 @@ class Polinomial_Expansion():
         return A, B, C
 
     def expand(self, f, c, window_side):
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+                    
         sigma = (window_side - 1)/4
         return self.poly_expand(f, c, sigma)

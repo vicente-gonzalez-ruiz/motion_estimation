@@ -4,8 +4,9 @@ import numpy as np
 import scipy
 from functools import partial
 import skimage.transform
-import logging
 from . import polinomial_expansion
+import logging
+import inspect
 
 PYRAMID_LEVELS = 3
 ITERATIONS = 5
@@ -13,11 +14,15 @@ WINDOW_SIDE = 7
 N_POLY = 7
 DOWN_SCALE = 2 # Only integers
 
-class OF_Estimation:
+class OF_Estimation(polinomial_expansion.Polinomial_Expansion):
 
     def __init__(self, logging_level=logging.INFO):
         self.logging_level = logging_level
-        self.PE = polinomial_expansion.Polinomial_Expansion(logging_level)
+        #self.PE = polinomial_expansion.Polinomial_Expansion(logging_level)
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging_level)
+        #self.PE = polinomial_expansion.Polinomial_Expansion(logging_level)
+        polinomial_expansion.Polinomial_Expansion.__init__(self, logging_level)
 
     def flow_iterative(
         self,
@@ -63,12 +68,22 @@ class OF_Estimation:
         flow
             Optical flow field. flow[i, j] is the (y, x) displacement for pixel (i, j)
         """
-    
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+
         # TODO: add initial warp parameters as optional input?
     
         # Calculate the polynomial expansion at each point in the images
-        A1, B1, C1 = self.PE.poly_expand(f1, c1, sigma)
-        A2, B2, C2 = self.PE.poly_expand(f2, c2, sigma)
+        A1, B1, C1 = self.poly_expand(f1, c1, sigma)
+        A2, B2, C2 = self.poly_expand(f2, c2, sigma)
     
         # Pixel coordinates of each point in the images
         x = np.stack(
@@ -207,6 +222,17 @@ class OF_Estimation:
         model="constant",
         mu=None
     ):
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+
         sigma = (N_poly - 1)/4
         sigma_flow = (window_side - 1)/4
         return self.flow_iterative(
@@ -228,6 +254,17 @@ class OF_Estimation:
         N_poly=N_POLY,
         model="constant",
         mu=None): # target and reference double's
+
+        print("logging_level", self.logging_level)
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
 
         # c1 = np.ones_like(target)
         # c2 = np.ones_like(reference)

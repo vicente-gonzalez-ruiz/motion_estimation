@@ -4,17 +4,15 @@ import numpy as np
 import scipy
 from functools import partial
 import skimage.transform
-import logging
 from . import polinomial_expansion
 from . import pyramid_gaussian
-
+import logging
 import inspect
 
 PYRAMID_LEVELS = 3
 WINDOW_SIDE = 5
-ITERATIONS = 5
-N_POLY = 11
-#PYR_SCALE = 0.5
+ITERATIONS = 7
+N_POLY = 7
 DOWN_SCALE = 2 # Only integers
 
 class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.Gaussian_Pyramid):
@@ -74,7 +72,7 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
         """
 
         if self.logging_level <= logging.INFO:
-            print(f"\nFunction: {inspect.stack()[1].function}")
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
                 if isinstance(values[arg], np.ndarray):
@@ -238,7 +236,7 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
     ):
 
         if self.logging_level <= logging.INFO:
-            print(f"\nFunction: {inspect.stack()[1].function}")
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
                 if isinstance(values[arg], np.ndarray):
@@ -270,7 +268,7 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
         mu=None): # target and reference double's
 
         if self.logging_level <= logging.INFO:
-            print(f"\nFunction: {inspect.stack()[1].function}")
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
                 if isinstance(values[arg], np.ndarray):
@@ -354,15 +352,17 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
             if flow is not None:
                 # TODO: account for shapes not quite matching
                 #d = skimage.transform.pyramid_expand(d, multichannel=True)
-                expanded_Z_flow = 2*self.expand_level(flow[..., 0])
-                expanded_Y_flow = 2*self.expand_level(flow[..., 1])
-                expanded_X_flow = 2*self.expand_level(flow[..., 2])
+                expanded_Z_flow = 2*self.expand_level(flow[..., 0])[: pyr1.shape[0], : pyr1.shape[1], : pyr1.shape[2]]
+                expanded_Y_flow = 2*self.expand_level(flow[..., 1])[: pyr1.shape[0], : pyr1.shape[1], : pyr1.shape[2]]
+                expanded_X_flow = 2*self.expand_level(flow[..., 2])[: pyr1.shape[0], : pyr1.shape[1], : pyr1.shape[2]]
                 print("pyr1.shape:", pyr1.shape)
                 print("flow.shape:", flow.shape)
+                print("expanded_Z_flow.shape:", expanded_Z_flow.shape)
                 flow = np.empty(shape=(pyr1.shape[0], pyr1.shape[1], pyr1.shape[2], 3))
-                flow[..., 0] = expanded_Z_flow
-                flow[..., 1] = expanded_Y_flow
-                flow[..., 2] = expanded_X_flow
+                print("flow[..., 0].shape=", flow[..., 0].shape)
+                flow[..., 0] = expanded_Z_flow[..., 0]
+                flow[..., 1] = expanded_Y_flow[..., 1]
+                flow[..., 2] = expanded_X_flow[..., 2]
                 #flow = self.expand_level(flow)
                 #flow = flow[: pyr1.shape[0], : pyr1.shape[1], : pyr1.shape[2]]
 

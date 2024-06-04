@@ -16,7 +16,7 @@ class Gaussian_Pyramid:
     def get_pyramid(self, volume, num_levels, down_scale=DOWN_SCALE):
 
         if self.logging_level <= logging.INFO:
-            print(f"\nFunction: {inspect.stack()[1].function}")
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
                 if isinstance(values[arg], np.ndarray):
@@ -39,7 +39,7 @@ class Gaussian_Pyramid:
     def expand_level(self, volume, down_scale=DOWN_SCALE):
 
         if self.logging_level <= logging.INFO:
-            print(f"\nFunction: {inspect.stack()[1].function}")
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
                 if isinstance(values[arg], np.ndarray):

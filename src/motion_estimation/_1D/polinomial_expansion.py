@@ -1,8 +1,9 @@
 '''Farneback's polynomial expansion (1D). See https://github.com/ericPrince/optical-flow'''
 
 import numpy as np
-import logging
 import scipy
+import logging
+import inspect
 
 class Polinomial_Expansion():
 
@@ -39,6 +40,17 @@ class Polinomial_Expansion():
             Constant term of polynomial expansion
         """
 
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+                    
         # Kernel applicability (gaussian)
         poly_n = int(4 * sigma + 1)
         #sigma = (poly_n/2 - 1)/4
@@ -94,5 +106,16 @@ class Polinomial_Expansion():
         return A, B, C
 
     def expand(self, f, c, window_length):
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+
         sigma = (window_length - 1)/4
         return self.poly_expand(f, c, sigma)
