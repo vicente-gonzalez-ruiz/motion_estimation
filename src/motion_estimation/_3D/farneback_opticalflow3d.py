@@ -5,6 +5,7 @@ from numba.core.errors import NumbaPerformanceWarning
 import warnings; warnings.filterwarnings("ignore", category=NumbaPerformanceWarning)
 import numpy as np
 import logging
+import inspect
 
 PYRAMID_LEVELS = 3
 WINDOW_SIDE = 5
@@ -13,14 +14,15 @@ N_POLY = 11
 #POLY_SIGMA = 1.2
 PYR_SCALE = 0.5
 
-class Farneback_Estimator(logging.Logger):
+class Farneback_Estimator():
     
     def __init__(
         self,      
         logging_level=logging.INFO
     ):
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging_level)
+        #self.logger = logging.getLogger(__name__)
+        #self.logger.setLevel(logging_level)
+        self.logging_level = logging_level
 
     def pyramid_get_flow(
         self,
@@ -36,8 +38,20 @@ class Farneback_Estimator(logging.Logger):
         threads_per_block=(8, 8, 8)
     ):
 
+        '''
         for attr, value in vars(self).items():
             self.logger.debug(f"{attr}: {value}")
+        '''
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
 
         farneback = opticalflow3D.Farneback3D(
             iters=iterations,

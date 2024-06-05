@@ -182,7 +182,7 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
             # calculated, and the parametrization should apply to the local calculations
             if mu == 0:
                 # Apply separable cross-correlation to calculate linear equation
-                # for each pixel: G*d = h
+                # for each voxel: G*d = h
                 G = scipy.ndimage.correlate1d(ATA, app_conv_win, axis=0, mode="constant", cval=0)
                 G = scipy.ndimage.correlate1d(G, app_conv_win, axis=1, mode="constant", cval=0)
                 G = scipy.ndimage.correlate1d(G, app_conv_win, axis=2, mode="constant", cval=0)
@@ -190,8 +190,17 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
                 h = scipy.ndimage.correlate1d(ATb, app_conv_win, axis=0, mode="constant", cval=0)
                 h = scipy.ndimage.correlate1d(h, app_conv_win, axis=1, mode="constant", cval=0)
                 h = scipy.ndimage.correlate1d(h, app_conv_win, axis=2, mode="constant", cval=0)
-    
-                flow = (S @ np.linalg.solve(G, h)[..., None])[..., 0]
+                try:
+                    flow = (S @ np.linalg.solve(G, h)[..., None])[..., 0]
+                except np.linalg.LinAlgError:
+                    print("G.shape:", G.shape)
+                    print("h.shape:", h.shape)
+                    _G = G.reshape(G.shape[0] * G.shape[1] * G.shape[2] , G.shape[3] * G.shape[4])
+                    _h = h.reshape(h.shape[0] * h.shape[1] * h.shape[2] , h.shape[3])
+                    __ = np.linalg.lstsq(_G, _h, rcond=None)[0]
+                    #_ = __.reshape(list()) OJO!!!
+                    _flow = (S @ __[..., None])[..., 0]
+                    flow = _flow
     
             # if mu is not 0, it should be used to regularize the least squares problem
             # and "force" the background warp onto uncertain pixels
@@ -360,9 +369,9 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
                 print("expanded_Z_flow.shape:", expanded_Z_flow.shape)
                 flow = np.empty(shape=(pyr1.shape[0], pyr1.shape[1], pyr1.shape[2], 3))
                 print("flow[..., 0].shape=", flow[..., 0].shape)
-                flow[..., 0] = expanded_Z_flow[..., 0]
-                flow[..., 1] = expanded_Y_flow[..., 1]
-                flow[..., 2] = expanded_X_flow[..., 2]
+                flow[..., 0] = expanded_Z_flow
+                flow[..., 1] = expanded_Y_flow
+                flow[..., 2] = expanded_X_flow
                 #flow = self.expand_level(flow)
                 #flow = flow[: pyr1.shape[0], : pyr1.shape[1], : pyr1.shape[2]]
 

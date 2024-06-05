@@ -3,7 +3,8 @@
 import logging
 import numpy as np
 from scipy.ndimage import map_coordinates
-
+import logging
+import inspect
 class Projection():
     
     def __init__(
@@ -18,6 +19,16 @@ class Projection():
               interpolation_mode='linear',
               extension_mode='nearest'):
 
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+                    
         height, width, depth = flow.shape[:3]
         map_x, map_y, map_z = np.indices((height, width, depth))
         map_x = map_x.astype('float32')
@@ -43,7 +54,18 @@ class Projection():
         return projection
 
     # Untested
-    def add_coordinates(flow, target):
+    def add_coordinates(self, flow, target):
+
+        if self.logging_level <= logging.INFO:
+            print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
+            args, _, _, values = inspect.getargvalues(inspect.currentframe())
+            for arg in args:
+                if isinstance(values[arg], np.ndarray):
+                    print(f"{arg}.shape: {values[arg].shape}", end=' ')
+                    print(f"{np.min(values[arg])} {np.average(values[arg])} {np.max(values[arg])}")
+                else:
+                    print(f"{arg}: {values[arg]}")
+
         return flow + np.moveaxis(np.indices(target.shape), 0, -1)
 
 '''
