@@ -19,7 +19,7 @@ class Projection():
               interpolation_mode='linear',
               extension_mode='nearest'):
 
-        if self.logging_level <= logging.INFO:
+        if self.logging_level < logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
@@ -56,7 +56,7 @@ class Projection():
     # Untested
     def add_coordinates(self, flow, target):
 
-        if self.logging_level <= logging.INFO:
+        if self.logging_level < logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:

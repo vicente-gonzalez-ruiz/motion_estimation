@@ -15,7 +15,7 @@ class Volume_Projection():
 
     def remap(self, volume, flow, use_gpu=True):
 
-        if self.logging_level <= logging.INFO:
+        if self.logging_level < logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
