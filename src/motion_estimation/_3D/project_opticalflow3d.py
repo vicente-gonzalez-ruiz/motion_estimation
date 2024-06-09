@@ -13,7 +13,7 @@ class Volume_Projection():
         #self.logger.setLevel(logging_level)
         self.logging_level = logging_level
 
-    def remap(self, volume, flow):
+    def remap(self, volume, flow, use_gpu=True):
 
         if self.logging_level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
@@ -33,7 +33,7 @@ class Volume_Projection():
             vx=flow[2],
             vy=flow[1],
             vz=flow[0],
-            use_gpu=False)
+            use_gpu=use_gpu)
         return projection
 
     def add_coordinates(motion, target):
