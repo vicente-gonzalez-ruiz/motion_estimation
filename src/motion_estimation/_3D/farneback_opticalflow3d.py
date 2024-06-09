@@ -1,6 +1,6 @@
-'''Farneback's optical flow algorithm (3D) using well-known libraries. See https://github.com/ericPrince/optical-flow'''
+'''Farneback's optical flow algorithm (3D) using opticalflow3d'''
 
-import opticalflow3D
+import opticalflow3D # pip install opticalflow3d
 from numba.core.errors import NumbaPerformanceWarning
 import warnings; warnings.filterwarnings("ignore", category=NumbaPerformanceWarning)
 import numpy as np
