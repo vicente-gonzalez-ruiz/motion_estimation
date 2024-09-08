@@ -1,4 +1,4 @@
-'''Farneback's optical flow algorithm (3D) using opticalflow3d'''
+'''Farneback's optical flow algorithm (3D) using opticalflow3d. See https://github.com/yongxb/OpticalFlow3d.'''
 
 import opticalflow3D # pip install opticalflow3d
 from numba.core.errors import NumbaPerformanceWarning
@@ -14,12 +14,9 @@ N_POLY = 11
 #POLY_SIGMA = 1.2
 PYR_SCALE = 0.5
 
-class Farneback_Estimator():
+class OF_Estimation():
     
-    def __init__(
-        self,      
-        logging_level=logging.INFO
-    ):
+    def __init__(self, logging_level=logging.INFO):
         #self.logger = logging.getLogger(__name__)
         #self.logger.setLevel(logging_level)
         self.logging_level = logging_level
@@ -30,9 +27,9 @@ class Farneback_Estimator():
         reference,
         flow=None,
         pyramid_levels=PYRAMID_LEVELS, # Number of pyramid layers
-        window_side=WINDOW_SIDE,       # Applicability window side
+        window_side=WINDOW_SIDE,       # Control the sie of the 3D gaussian 
         iterations=ITERATIONS,         # Number of iterations at each pyramid level
-        N_poly=N_POLY,                 # Standard deviation of the Gaussian basis used in the polynomial expansion
+        N_poly=N_POLY,                 # Control the size of the 3D gaussian kernel used to compute the polynomial expansion
         block_size=(256, 256, 256),
         overlap=(64, 64, 64),
         threads_per_block=(8, 8, 8)
@@ -57,10 +54,8 @@ class Farneback_Estimator():
             iters=iterations,
             num_levels=pyramid_levels,
             scale=0.5,
-            spatial_size=window_side,
-            sigma_k=1.0,
-            filter_type="gaussian",
-            filter_size=N_poly,
+            spatial_size=N_poly, sigma_k=1.0, # Gaussian applicability (that is, the relative importance of the points in the neighborhood) with standard_deviation = sigma_k * (spatial_size -1) used for the polinomial expansion. Should match the scale of the structures we wnat to estimate orientation for (page 77). However, small applicabilities are more sensitive to noise.
+            filter_type="gaussian", filter_size=window_side, # Averaging window size to generate smooth OF. 
             presmoothing=None,
             device_id=0)
 

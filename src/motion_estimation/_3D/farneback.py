@@ -1,4 +1,4 @@
-'''Farneback's optical flow algorithm (3D). See https://github.com/ericPrince/optical-flow'''
+'''Farneback's optical flow algorithm (3D). See https://github.com/ericPrince/optical-flow.'''
 
 import numpy as np
 import scipy
