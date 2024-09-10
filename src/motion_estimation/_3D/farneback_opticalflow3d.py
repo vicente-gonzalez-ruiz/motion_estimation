@@ -26,10 +26,24 @@ PYRAMID_SCALE = 0.5
 
 class OF_Estimation():
     
-    def __init__(self, logging_level=logging.INFO):
+    def __init__(self, logging_level=logging.INFO,
         #self.logger = logging.getLogger(__name__)
         #self.logger.setLevel(logging_level)
+        start_point=(0, 0, 0),
+        block_size=(256, 256, 256),
+        overlap=(8, 8, 8),
+        #overlap={64, 64, 64},
+        threads_per_block=(8, 8, 8),
+        use_gpu=True,
+        device_id=0
+    ):
         self.logging_level = logging_level
+        self.start_point = start_point
+        self.block_size = block_size
+        self.overlap = overlap
+        self.threads_per_block = threads_per_block
+        self.use_gpu = use_gpu
+        self.device_id = device_id
 
     def pyramid_get_flow(
         self,
@@ -40,10 +54,7 @@ class OF_Estimation():
         sigma_k=SIGMA_K,
         filter_type=FILTER_TYPE,
         filter_size=FILTER_SIZE,
-        presmoothing=None,
-        block_size=(256, 256, 256),
-        overlap=(8, 8, 8),
-        threads_per_block=(8, 8, 8)
+        presmoothing=None
     ):
 
         '''
@@ -70,15 +81,15 @@ class OF_Estimation():
             filter_type=filter_type,
             filter_size=filter_size,
             presmoothing=presmoothing,
-            device_id=0)
+            device_id=self.device_id)
 
         flow_z, flow_y, flow_x, output_confidence = farneback.calculate_flow(
             image1=reference,
             image2=target,
-            start_point=(0, 0, 0),
+            start_point=self.start_point,
             total_vol=(reference.shape[0], reference.shape[1], reference.shape[2]),
-            sub_volume=block_size,
-            overlap=overlap,
-            threadsperblock=threads_per_block)
+            sub_volume=self.block_size,
+            overlap=self.overlap,
+            threadsperblock=self.threads_per_block)
 
         return flow_z, flow_y, flow_x
