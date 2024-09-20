@@ -1,4 +1,4 @@
-'''Farneback's optical flow algorithm (3D) using opticalflow3d'''
+'''Farneback's optical flow algorithm (3D) using opticalflow3d. See https://github.com/yongxb/OpticalFlow3d.'''
 
 import opticalflow3D # pip install opticalflow3d
 from numba.core.errors import NumbaPerformanceWarning
@@ -9,7 +9,7 @@ import inspect
 
 # Polynomial expansion
 SPATIAL_SIZE = 9    # Side of the Gaussian applicability window used
-                    # during the polynomial expansion.
+                    # during the polynomial expansion. Applicability (that is, the relative importance of the points in the neighborhood) size should match the scale of the structures we wnat to estimate orientation for (page 77). However, small applicabilities are more sensitive to noise.
 SIGMA_K = 0.15      # Scaling factor used to calculate the standard
                     # deviation of the Gaussian applicability. The
                     # formula to calculate the standard deviation is
@@ -24,15 +24,26 @@ PYRAMID_LEVELS = 3  # Number of pyramid layers
 ITERATIONS = 5      # Number of iterations at each pyramid level
 PYRAMID_SCALE = 0.5
 
-class Farneback_Estimator():
+class OF_Estimation():
     
-    def __init__(
-        self,      
-        logging_level=logging.INFO
-    ):
+    def __init__(self, logging_level=logging.INFO,
         #self.logger = logging.getLogger(__name__)
         #self.logger.setLevel(logging_level)
+        start_point=(0, 0, 0),
+        block_size=(256, 256, 256),
+        overlap=(8, 8, 8),
+        #overlap={64, 64, 64},
+        threads_per_block=(8, 8, 8),
+        use_gpu=True,
+        device_id=0
+    ):
         self.logging_level = logging_level
+        self.start_point = start_point
+        self.block_size = block_size
+        self.overlap = overlap
+        self.threads_per_block = threads_per_block
+        self.use_gpu = use_gpu
+        self.device_id = device_id
 
     def pyramid_get_flow(
         self,
@@ -41,10 +52,9 @@ class Farneback_Estimator():
         spatial_size=SPATIAL_SIZE,
         iterations=ITERATIONS,
         sigma_k=SIGMA_K,
-        presmoothing = None,
-        block_size=(256, 256, 256),
-        overlap=(64, 64, 64),
-        threads_per_block=(8, 8, 8)
+        filter_type=FILTER_TYPE,
+        filter_size=FILTER_SIZE,
+        presmoothing=None
     ):
 
         '''
@@ -71,15 +81,15 @@ class Farneback_Estimator():
             filter_type=filter_type,
             filter_size=filter_size,
             presmoothing=presmoothing,
-            device_id=0)
+            device_id=self.device_id)
 
         flow_z, flow_y, flow_x, output_confidence = farneback.calculate_flow(
             image1=reference,
             image2=target,
-            start_point=(0, 0, 0),
+            start_point=self.start_point,
             total_vol=(reference.shape[0], reference.shape[1], reference.shape[2]),
-            sub_volume=block_size,
-            overlap=overlap,
-            threadsperblock=threads_per_block)
+            sub_volume=self.block_size,
+            overlap=self.overlap,
+            threadsperblock=self.threads_per_block)
 
         return flow_z, flow_y, flow_x

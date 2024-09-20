@@ -3,7 +3,7 @@ import opticalflow3D
 import inspect
 import logging
 
-class Volume_Projection():
+class Projection():
     
     def __init__(
         self,
