@@ -16,11 +16,16 @@ DOWN_SCALE = 2 # Only integers
 
 class OF_Estimation(polinomial_expansion.Polinomial_Expansion):
 
-    def __init__(self, logging_level=logging.INFO):
-        self.logging_level = logging_level
+    def __init__(
+        self,
+        #logging_level=logging.INFO
+        logger
+    ):
+        #self.logging_level = logging_level
         #self.PE = polinomial_expansion.Polinomial_Expansion(logging_level)
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging_level)
+        #self.logger = logging.getLogger(__name__)
+        #self.logger.setLevel(logging_level)
+        self.logger = logger
         #self.PE = polinomial_expansion.Polinomial_Expansion(logging_level)
         polinomial_expansion.Polinomial_Expansion.__init__(self, logging_level)
 
@@ -69,7 +74,8 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion):
             Optical flow field. flow[i, j] is the (y, x) displacement for pixel (i, j)
         """
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
+        #if self.logging_level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
@@ -223,7 +229,8 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion):
         mu=None
     ):
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
+        #if self.logging_level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
@@ -255,8 +262,11 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion):
         model="constant",
         mu=None): # target and reference double's
 
-        print("logging_level", self.logging_level)
-        if self.logging_level <= logging.INFO:
+        print("logging_level", logger.getEffectiveLevel())
+        #print("logging_level", self.logging_level)
+        if self.logger.getEffectiveLevel() <= logging.INFO:
+
+        #if self.logging_level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:

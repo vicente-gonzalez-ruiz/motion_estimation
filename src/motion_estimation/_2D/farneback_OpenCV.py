@@ -1,7 +1,7 @@
 '''Farmeback's optical flow algorithm (2D). See
 https://docs.opencv.org/3.4/dc/d6b/group__video__track.html#ga5d10ebbd59fe09c5f650289ec0ece5af'''
 
-import logging
+#import logging
 import time
 
 import cv2
@@ -14,15 +14,17 @@ N_POLY = 5
 POLY_SIGMA = 1.2
 PYR_SCALE = 0.5
 
-class OF_Estimation(logging.Logger):
+class OF_Estimation():
     
     def __init__(
-        self,      
-        logging_level=logging.INFO
+        self,
+        logger
+        #logging_level=logging.INFO
     ):
-        self.logger = logging.getLogger(__name__)
+        #self.logger = logging.getLogger(__name__)
         #self.flags = 0
-        self.logger.setLevel(logging_level)
+        #self.logger.setLevel(logging_level)
+        self.logger = logger
         
         for attr, value in vars(self).items():
             self.logger.debug(f"{attr}: {value}")

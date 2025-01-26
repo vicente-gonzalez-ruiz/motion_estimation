@@ -9,6 +9,7 @@ import logging
 #from pyramid_gaussian import Gaussian_Pyramid
 from . import polinomial_expansion
 from . import pyramid_gaussian
+import inspect
 
 PYRAMID_LEVELS = 1
 ITERATIONS = 1
@@ -18,12 +19,17 @@ DOWN_SCALE = 2 # Only integers
 
 class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.Gaussian_Pyramid):
 
-    def __init__(self, logging_level=logging.INFO):
-        self.logging_level = logging_level
+    def __init__(
+        self,
+        #logging_level=logging.INFO
+        logger
+    ):
+        #self.logging_level = logging_level
         #logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
-        self.logger = logging.getLogger(__name__)
-        print(logging_level)
-        self.logger.setLevel(logging_level)
+        #self.logger = logging.getLogger(__name__)
+        #print(logging_level)
+        #self.logger.setLevel(logging_level)
+        self.logger = logger
         #self.PE = polinomial_expansion.Polinomial_Expansion(logging_level)
         #self.gaussian_pyramid = pyramid_gaussian.Gaussian_Pyramid()
 
@@ -73,7 +79,8 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
             Optical flow field. flow[i] is the x displacement for sample i
         """
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
+        #if self.logging_level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
@@ -228,7 +235,8 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
         mu=None
     ):
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
+        #if self.logging_level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
@@ -260,7 +268,8 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
         model="constant",
         mu=None): # target and reference double's
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
+        #if self.logging_level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:

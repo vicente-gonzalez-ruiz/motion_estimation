@@ -7,8 +7,13 @@ import inspect
 
 class Polinomial_Expansion():
 
-    def __init__(self, logging_level=logging.INFO):
-        self.logging_level = logging_level
+    def __init__(
+        self,
+        logger
+        #logging_level=logging.INFO
+    ):
+        #self.logging_level = logging_level
+        self.logger = logger
 
     def poly_expand(self, f, c, sigma):
     #def poly_expand(self, f, c, poly_n):
@@ -40,8 +45,8 @@ class Polinomial_Expansion():
             Constant term of polynomial expansion
         """
 
-
-        if self.logging_level <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
+        #if self.logging_level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
@@ -107,7 +112,8 @@ class Polinomial_Expansion():
 
     def expand(self, f, c, window_length):
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
+        #if self.logging_level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:

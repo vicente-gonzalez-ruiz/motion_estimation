@@ -2,19 +2,25 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 import logging
+import inspect
 
 DOWN_SCALE = 2 # Only integers
 NUM_LEVELS = 3
 
 class Gaussian_Pyramid:
 
-    def __init__(self, logging_level=logging.INFO):
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging_level)
+    def __init__(
+        self, 
+        #logging_level=logging.INFO
+    ):
+        #self.logger = logging.getLogger(__name__)
+        #self.logger.setLevel(logging_level)
+        self.logger = logger
 
     def filter(self, signal, sigma):
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
+        #if self.logging_level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
@@ -39,7 +45,8 @@ class Gaussian_Pyramid:
 
     def downsample(self, signal, down_scale=DOWN_SCALE):
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
+        #if self.logging_level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
@@ -54,7 +61,8 @@ class Gaussian_Pyramid:
 
     def get_pyramid(self, signal, num_levels=NUM_LEVELS, down_scale=DOWN_SCALE):
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
+        #if self.logging_level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
@@ -82,7 +90,8 @@ class Gaussian_Pyramid:
 
     def expand_level(self, signal, down_scale=DOWN_SCALE):
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
+        #if self.logging_level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
