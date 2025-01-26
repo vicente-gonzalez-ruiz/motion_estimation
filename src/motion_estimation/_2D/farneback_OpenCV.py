@@ -86,7 +86,7 @@ class Estimator_in_GPU(OF_Estimation):
             polySigma=self.poly_sigma,
             flags=self.flags)
 
-        if logger.getEffectiveLevel() <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
             self.transference_time = 0
 
     def get_times(self):

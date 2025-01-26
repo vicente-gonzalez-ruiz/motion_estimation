@@ -26,7 +26,10 @@ PYRAMID_SCALE = 0.5
 
 class OF_Estimation():
     
-    def __init__(self, logging_level=logging.INFO,
+    def __init__(
+        self,
+        logger,
+        #logging_level=logging.INFO,
         #self.logger = logging.getLogger(__name__)
         #self.logger.setLevel(logging_level)
         start_point=(0, 0, 0),
@@ -37,7 +40,8 @@ class OF_Estimation():
         use_gpu=True,
         device_id=0
     ):
-        self.logging_level = logging_level
+        self.logger = logger
+        #self.logging_level = logging_level
         self.start_point = start_point
         self.block_size = block_size
         self.overlap = overlap
@@ -62,7 +66,8 @@ class OF_Estimation():
             self.logger.debug(f"{attr}: {value}")
         '''
 
-        if self.logging_level < logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
+        #if self.logging_level < logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
