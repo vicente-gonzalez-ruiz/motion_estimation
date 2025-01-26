@@ -102,7 +102,7 @@ target using the flow, get should get reference.
 
         '''
         
-        if logger.getEffectiveLevel() <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
             time_0 = time.perf_counter()
             
         GPU_target = cv2.cuda_GpuMat()
@@ -112,11 +112,11 @@ target using the flow, get should get reference.
         GPU_prev_flow = cv2.cuda_GpuMat()
         GPU_prev_flow.upload(flow)
         
-        if logger.getEffectiveLevel() <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
             last_transference_time += (time.perf_counter() - time_0)
             self.transference_time += last_transference_time
                  
-        if logger.getEffectiveLevel() <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
             time_0 = time.perf_counter()
 
         GPU_flow = cv2.cuda.FarnebackOpticalFlow.calc(
@@ -125,20 +125,20 @@ target using the flow, get should get reference.
             I1=GPU_reference,
             flow=GPU_prev_flow)    
     
-        if logger.getEffectiveLevel() <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
             time_1 = time.perf_counter()
             last_running_time = time_1 - time_0
             self.running_time += last_running_time
 
-        if logger.getEffectiveLevel() <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
             time_0 = time.perf_counter()
 
         flow = GPU_flow.download()
     
-        if logger.getEffectiveLevel() <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
             last_transference_time += (time.perf_counter() - time_0)
             self.transference_time += self.last_transference_time
 
-        logger.debug(f"avg_OF={np.average(np.abs(flow)):4.2f}")
+        self.logger.debug(f"avg_OF={np.average(np.abs(flow)):4.2f}")
 
         return flow

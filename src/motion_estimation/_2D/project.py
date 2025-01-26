@@ -9,17 +9,19 @@ class Projection():
     
     def __init__(
         self,
-        logging_level=logging.INFO
+        logger
+        #logging_level=logging.INFO
     ):
-        self.logging_level = logging_level
+        self.logger = logger
+        #self.logging_level = logging_level
 
     def remap(self,
-              slice,
+              image,
               flow,
               interpolation_mode=cv2.INTER_LINEAR,
               extension_mode=cv2.BORDER_REPLICATE):
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
@@ -34,7 +36,7 @@ class Projection():
         map_y = np.swapaxes(np.tile(np.arange(height), (width, 1)), 0, 1)
         map_xy = (flow + np.dstack((map_x, map_y))).astype('float32')
         projection = cv2.remap(
-            slice,
+            image,
             map_xy,
             None,
             interpolation=interpolation_mode,
@@ -43,7 +45,7 @@ class Projection():
 
     def add_coordinates(flow, target):
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
