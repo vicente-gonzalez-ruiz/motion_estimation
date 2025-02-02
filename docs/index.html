@@ -19,7 +19,7 @@
 
 <h2 class='titleHead'><a href='https://vicente-gonzalez-ruiz.github.io/motion_estimation'>Motion Estimation</a></h2>
  <div class='author'><a href='https://cms.ual.es/UAL/personas/persona.htm?id=515256515553484875'><span class='ecrm-1200'>Vicente González Ruiz</span></a> <span class='ecrm-1200'>- </span><a href='https://cms.ual.es/UAL/universidad/departamentos/informatica/index.htm'><span class='ecrm-1200'>Depto Informática</span></a> <span class='ecrm-1200'>- </span><a href='https://www.ual.es'><span class='ecrm-1200'>UAL</span></a></div><br />
-<div class='date'><span class='ecrm-1200'>February 9, 2024</span></div>
+<div class='date'><span class='ecrm-1200'>February 2, 2025</span></div>
    </div>
    <h3 class='sectionHead'><span class='titlemark'>1   </span> <a id='x1-10001'></a>Causes of motion</h3>
 <!-- l. 12 --><p class='noindent'>
@@ -35,21 +35,20 @@ of the objects in the scene to the 2D plane captured by the camera.
 </p><!-- l. 24 --><p class='noindent'>
 </p>
    <h3 class='sectionHead'><span class='titlemark'>2   </span> <a id='x1-20002'></a>Idea</h3>
-                                                                  
-
-                                                                  
 <!-- l. 27 --><p class='noindent'>In some 3D signals processed as sequences of 2D frames (for example, in a video that
 is a sequence of frames), <a href='https://en.wikipedia.org/wiki/Motion_estimation'>motion estimation</a> techniques find a mapping between such
 frames. Such mappings between two or more frames (usually, in the form of one or
+                                                                  
+
+                                                                  
 more motion vector fields per frame) can be used in motion compensated transforms,
 such as Hybrid Coding <span class='cite'>[<span class='ecbx-1000'>?</span>]</span> and MCTF <span class='cite'>[<a href='#Xvruiz__MCTF'>3</a>]</span>). Notice that in these examples of
 temporal transforms, the motion information must be available also during the
 decoding process.
-</p><!-- l. 38 --><p class='indent'>   In its simplest form, a motion compensated transform inputs one (or
-more) reference frame(s) \({\mathbf R}=\{{\mathbf R}_i\}\), and a motion vectors field \(\overset {{\mathbf R}\rightarrow {\mathbf P}}{\mathbf M}\) that indicates how to
-project \(\mathbf R\) onto the predicted (anchor) frame \(\mathbf P\), and outputs a prediction frame
-\begin {equation}  \hat {{\mathbf P}} = \overset {{\mathbf R}\rightarrow {\mathbf P}}{\mathbf M}({\mathbf R}). \label {eq:MCP1}  \end {equation}
-With this, we compute the residue frame (prediction error) \begin {equation}  {\mathbf E} = {\mathbf P} - \hat {\mathbf P}.  \end {equation}
+</p><!-- l. 38 --><p class='indent'>   In its simplest form, a motion compensated transform inputs one (or more)
+reference frame(s) \({\mathbf R}=\{{\mathbf R}_i\}\), and a motion vectors field \(\overset {{\mathbf R}\rightarrow {\mathbf P}}{\mathbf M}\) that indicates how to project \(\mathbf R\) onto
+the predicted (anchor) frame \(\mathbf P\), and outputs a prediction frame \begin {equation}  \hat {{\mathbf P}} = \overset {{\mathbf R}\rightarrow {\mathbf P}}{\mathbf M}({\mathbf R}). \label {eq:MCP1}  \end {equation}<a id='x1-2001r1'></a> With this, we
+compute the residue frame (prediction error) \begin {equation}  {\mathbf E} = {\mathbf P} - \hat {\mathbf P}.  \end {equation}<a id='x1-2002r2'></a>
 </p><!-- l. 52 --><p class='indent'>   An example of such transformation can be found in the notebook <a href='https://github.com/vicente-gonzalez-ruiz/motion_estimation/blob/main/src/motion_estimation/full_search_block_ME.ipynb'>Full search
 block-based ME</a>. As it can be seen, the entropy of the motion compensated redidue
 has been significantly decreased compared to the case in which the motion is not
@@ -66,16 +65,15 @@ compensated.
 
                                                                   
 <!-- l. 125 --><p class='noindent'><div style='text-align:center;'> <img src='graphics/simple.svg' /> </div>  <a id='x1-3001r1'></a>
-<a id='x1-3002'></a>
 </p>
 <figcaption class='caption'><span class='id'>Figure 1: </span><span class='content'>ME using disjoint blocks. \(({\mathbf M}_x, {\mathbf M}_y)\) is the motion vector that indicates where
-the block \((x,y)\) of \(\mathbf P\) is found in \(\mathbf R\).                                            </span></figcaption><!-- tex4ht:label?: x1-3001r3  -->
+the block \((x,y)\) of \(\mathbf P\) is found in \(\mathbf R\).                                            </span></figcaption><!-- tex4ht:label?: x1-3001r1  -->
                                                                   
 
                                                                   
    </figure>
 <!-- l. 132 --><p class='indent'>   Block-based ME is the simplest ME algorithm (see the Fig. <a href='#x1-3001r1'>1<!-- tex4ht:ref: fig:simple  --></a>), \(\mathbf P\) is divided in blocks of (for example)
-16x16 pixels<span class='footnote-mark'><a href='#fn1x0' id='fn1x0-bk'><sup class='textsuperscript'>1</sup></a></span><a id='x1-3003f1'></a>,
+16x16 pixels<span class='footnote-mark'><a href='#fn1x0' id='fn1x0-bk'><sup class='textsuperscript'>1</sup></a></span><a id='x1-3002f1'></a>,
 and we can use the (R)MSE that measures the distance in L\(_2\) (also known as the
 Euclidean distance) between each block of \(\mathbf P\) and its surrounding pixels in \(\mathbf R\) (the so
 called search area) <span class='cite'>[<a href='#Xzhu2000new'>7</a>]</span>. For each block, a motion vector that indicates the best match
@@ -105,9 +103,8 @@ the compression ratio.
 
                                                                   
 <!-- l. 169 --><p class='noindent'><div style='text-align:center;'> <img src='graphics/overlaped.svg' /> </div>  <a id='x1-5001r2'></a>
-<a id='x1-5002'></a>
 </p>
-<figcaption class='caption'><span class='id'>Figure 2: </span><span class='content'>ME using overlaped blocks.                                  </span></figcaption><!-- tex4ht:label?: x1-5001r5  -->
+<figcaption class='caption'><span class='id'>Figure 2: </span><span class='content'>ME using overlaped blocks.                                  </span></figcaption><!-- tex4ht:label?: x1-5001r2  -->
                                                                   
 
                                                                   
@@ -130,16 +127,15 @@ also more coherent.
                                                                   
 
                                                                   
-<!-- l. 213 --><p class='noindent'><div style='text-align:center;'> <img src='graphics/average.svg' /> </div>  <a id='x1-5003r3'></a>
-<a id='x1-5004'></a>
+<!-- l. 213 --><p class='noindent'><div style='text-align:center;'> <img src='graphics/average.svg' /> </div>  <a id='x1-5002r3'></a>
 </p>
-<figcaption class='caption'><span class='id'>Figure 3: </span><span class='content'>ME using overlaped blocks, averaging the overlaped pixels.        </span></figcaption><!-- tex4ht:label?: x1-5003r5  -->
+<figcaption class='caption'><span class='id'>Figure 3: </span><span class='content'>ME using overlaped blocks, averaging the overlaped pixels.        </span></figcaption><!-- tex4ht:label?: x1-5002r3  -->
                                                                   
 
                                                                   
    </figure>
 <!-- l. 218 --><p class='indent'>   An improvement of the previous technique can also average the overlaped pixels
-in the prediction frame \(\hat {P}\), as it has been shown in the Fig. <a href='#x1-5003r3'>3<!-- tex4ht:ref: fig:average  --></a>.
+in the prediction frame \(\hat {P}\), as it has been shown in the Fig. <a href='#x1-5002r3'>3<!-- tex4ht:ref: fig:average  --></a>.
 </p>
    <h4 class='subsectionHead'><span class='titlemark'>5.1   </span> <a id='x1-60005.1'></a>Machine learning</h4>
 <!-- l. 227 --><p class='noindent'>ANNs (Artifical Neural Networks) can be trained to estimate the motion between
@@ -160,11 +156,10 @@ and therefore, the motion information should provide subpixel displacements.
                                                                   
 
                                                                   
-<!-- l. 244 --><p class='noindent'><div style='text-align:center;'> <img src='graphics/interpolation.svg' /> </div>  <a id='x1-7002r4'></a>
-<a id='x1-7003'></a>
+<!-- l. 244 --><p class='noindent'><div style='text-align:center;'> <img src='graphics/interpolation.svg' /> </div>  <a id='x1-7003r4'></a>
 </p>
 <figcaption class='caption'><span class='id'>Figure 4: </span><span class='content'>Pixel interpolation.
-</span></figcaption><!-- tex4ht:label?: x1-7002r6  -->
+</span></figcaption><!-- tex4ht:label?: x1-7003r4  -->
                                                                   
 
                                                                   
@@ -174,7 +169,7 @@ generated after: (1) interpolate the reference(s) image(s), and (2)
 subsample<span class='footnote-mark'><a href='#fn3x0' id='fn3x0-bk'><sup class='textsuperscript'>3</sup></a></span><a id='x1-7004f3'></a>
 the prediction to the resolution of the predicted image. For example, in MPEG-1, the
 motion estimation can have up to 1/2 pixel accuracy. In this case, a bi-linear
-interpolator is used (see the Fig. <a href='#x1-7002r4'>4<!-- tex4ht:ref: fig:interpolation  --></a>).
+interpolator is used (see the Fig. <a href='#x1-7003r4'>4<!-- tex4ht:ref: fig:interpolation  --></a>).
 </p><!-- l. 257 --><p class='indent'>   Unfortunately, the use of subpixel accuracy increases the entropy of the motion
 information and, potentially, the number of motion vectors.
 </p>
@@ -190,12 +185,11 @@ information and, potentially, the number of motion vectors.
 
                                                                   
 <!-- l. 269 --><p class='noindent'><div style='text-align:center;'> <img src='graphics/spiral_search.svg' /> </div>  <a id='x1-8001r5'></a>
-<a id='x1-8002'></a>
 </p>
 <figcaption class='caption'><span class='id'>Figure 5: </span><span class='content'>\(\pm \) 1 spiral search. Notice that, in the case that all the comparisons have
 the same error, the null motion vector is selected. Notice also that the spiral
 can have any size.
-</span></figcaption><!-- tex4ht:label?: x1-8001r7  -->
+</span></figcaption><!-- tex4ht:label?: x1-8001r5  -->
                                                                   
 
                                                                   
@@ -214,10 +208,9 @@ to zero, a spiral search is performed (see Fig. <span class='cite'>[<span class
 
                                                                   
 <!-- l. 286 --><p class='noindent'><div style='text-align:center;'> <img src='graphics/full_search.svg' /> </div>  <a id='x1-9001r6'></a>
-<a id='x1-9002'></a>
 </p>
 <figcaption class='caption'><span class='id'>Figure 6: </span><span class='content'>The full search scheme.
-</span></figcaption><!-- tex4ht:label?: x1-9001r7  -->
+</span></figcaption><!-- tex4ht:label?: x1-9001r6  -->
                                                                   
 
                                                                   
@@ -238,13 +231,13 @@ in two consecutive images is similar.
    <h4 class='subsectionHead'><span class='titlemark'>7.4   </span> <a id='x1-120007.4'></a>Optical flow</h4>
 <!-- l. 334 --><p class='noindent'>The Optical Flow (OF) <span class='cite'>[<a href='#Xhorn1981determining'>4</a>]</span> describes the aparent motion of the pixels in the scene
 between two frames. There are several OF estimators proposed in the literature, and
-one of the most used is the Farnebäck’s algorithm <span class='cite'>[<a href='#Xfarneback2003two'>2</a>]</span>, which instead of comparing
-pixels in the image domain, compares the coefficients generated by the transform
-defined by the basis functions \begin {equation}  \{1, x, y, x^2, y^2, xy\}  \end {equation}
-(see the notebook <a href='https://github.com/vicente-gonzalez-ruiz/motion_estimation/blob/main/src/motion_estimation/farneback_ME.ipynb'>Farnebäck’s motion estimation</a>). In this transform domain, the
-corresponding subbands quantify the tendency of the image to increase its intensity
-in different 2D directions, and therefore, it is more efficient to know the direction in
-which the objects are moving.
+one of the most used is the Farnebäck’s algorithm <span class='cite'>[<a href='#Xfarneback2003two'>2</a>]</span>, which instead of
+comparing pixels in the image domain, compares the coefficients generated by the
+transform defined by the basis functions \begin {equation}  \{1, x, y, x^2, y^2, xy\}  \end {equation}<a id='x1-12001r3'></a> (see the notebook <a href='https://github.com/vicente-gonzalez-ruiz/motion_estimation/blob/main/src/motion_estimation/farneback_ME.ipynb'>Farnebäck’s motion
+estimation</a>). In this transform domain, the corresponding subbands quantify the
+tendency of the image to increase its intensity in different 2D directions, and
+therefore, it is more efficient to know the direction in which the objects are
+moving.
 </p><!-- l. 350 --><p class='indent'>   Farnebäck’s is a dense OF estimator, which means that we obtain one
 motion vector per pixel. This is achieved applying the previous algorithm to
 any pixel of the image using a sliding window. It also provided subpixel
@@ -252,15 +245,14 @@ accuracy.
 </p><!-- l. 384 --><p class='noindent'>
 </p>
    <h3 class='sectionHead'><span class='titlemark'>8   </span> <a id='x1-130008'></a>ME and RDO</h3>
-<!-- l. 387 --><p class='noindent'>ME can be designed to minimize the distortion \(D\) of the residues after using the
-MCT (Motion Compensated Transform), or to minimize the lagrangian
-\begin {equation}  J = R + \lambda D,  \end {equation}
-which also takes into consideration the bit-rate \(R\). Notice, however, that in this case
-the computation of the motion information is also determined by the bit-rate
+<!-- l. 387 --><p class='noindent'>ME can be designed to minimize the distortion \(D\) of the residues after using the MCT
+(Motion Compensated Transform), or to minimize the lagrangian \begin {equation}  J = R + \lambda D,  \end {equation}<a id='x1-13001r4'></a> which also takes
+into consideration the bit-rate \(R\). Notice, however, that in this case the computation of
+the motion information is also determined by the bit-rate achieved by the entropy
+coding of the motion data and the residues.
                                                                   
 
                                                                   
-achieved by the entropy coding of the motion data and the residues.
 </p><!-- l. 398 --><p class='indent'>   Notice that, in general, \(D\) will decrease if the “motion part” of \(R\) increases.
 However, if the motion information can be infered by the decoder, \(R\) will be
 only affected by the entropy encoding of the residues. On the other hand,
@@ -279,12 +271,11 @@ encoder.
          <li class='itemize'>
          <!-- l. 418 --><p class='noindent'><span class='ecbx-1000'>MSE (Mean Square Error)</span>: We minimize the energy \(\mathbf E\) (also known
          as the L\(^2\) distance):
-         </p><!-- l. 422 --><p class='noindent'>\begin {equation}  \frac {1}{16\times 16}\sum _{i=1}^{16}\sum _{j=1}^{16}(a_{ij}-b_{ij})^2  \end {equation}
+         </p><!-- l. 422 --><p class='noindent'>\begin {equation}  \frac {1}{16\times 16}\sum _{i=1}^{16}\sum _{j=1}^{16}(a_{ij}-b_{ij})^2  \end {equation}<a id='x1-14001r5'></a>
          </p></li>
          <li class='itemize'>
          <!-- l. 424 --><p class='noindent'><span class='ecbx-1000'>MAE (Mean Absolute Error)</span>:
-         </p><!-- l. 428 --><p class='noindent'>\begin {equation}  \frac {1}{16\times 16}\sum _{i=1}^{16}\sum _{j=1}^{16}|a_{ij}-b_{ij}|  \end {equation}
-         </p></li></ul>
+         </p><!-- l. 428 --><p class='noindent'>\begin {equation}  \frac {1}{16\times 16}\sum _{i=1}^{16}\sum _{j=1}^{16}|a_{ij}-b_{ij}|  \end {equation}<a id='x1-14002r6'></a></p></li></ul>
      </li>
      <li class='itemize'>These similitude measures are used only by MPEG compressors. Therefore, any
      other one with similar effects (such as the error variance or the error entropy)
@@ -293,14 +284,13 @@ encoder.
      <li class='itemize'>
      <!-- l. 435 --><p class='noindent'>Other less common distortion metrics that can work are:
 </p>
+         <ul class='itemize2'>
+         <li class='itemize'>
                                                                   
 
                                                                   
-         <ul class='itemize2'>
-         <li class='itemize'>
          <!-- l. 439 --><p class='noindent'><span class='ecbx-1000'>EE (Error </span><a href='https://en.wikipedia.org/wiki/Entropy_(information_theory)'><span class='ecbx-1000'>Entropy</span></a><span class='ecbx-1000'>)</span>:
-         </p><!-- l. 444 --><p class='noindent'>\begin {equation}  -\frac {1}{16\times 16}\sum _{i=1}^{16}\sum _{j=1}^{16}\log _2(a_{ij}-b_{ij})p(a_{ij}-b_{ij})  \end {equation}
-         </p></li></ul>
+         </p><!-- l. 444 --><p class='noindent'>\begin {equation}  -\frac {1}{16\times 16}\sum _{i=1}^{16}\sum _{j=1}^{16}\log _2(a_{ij}-b_{ij})p(a_{ij}-b_{ij})  \end {equation}<a id='x1-14003r7'></a></p></li></ul>
      </li></ul>
 <!-- l. 450 --><p class='noindent'>
 </p>
@@ -314,7 +304,7 @@ encoder.
    </p>
    <p class='bibitem'><span class='biblabel'>
  [2]<span class='bibsp'>   </span></span><a id='Xfarneback2003two'></a>G. Farnebäck.  <a href='https://link.springer.com/content/pdf/10.1007/3-540-45103-X_50.pdf'>Two-Frame Motion Estimation Based on Polynomial
-   Pxpansion</a>.  In <span class='ecti-1000'>Scandinavian conference on Image analysis</span>, pages 363–370.
+   Expansion</a>.  In <span class='ecti-1000'>Scandinavian conference on Image analysis</span>, pages 363–370.
    Springer, 2003.
    </p>
    <p class='bibitem'><span class='biblabel'>
@@ -329,14 +319,14 @@ encoder.
  [5]<span class='bibsp'>   </span></span><a id='Xorchard1994overlapped'></a>M.T.   Orchard   and   G.J.   Sullivan.       <a href='https://www.semanticscholar.org/paper/Overlapped-block-motion-compensation%3A-an-approach-Orchard-Sullivan/8f46f291825caa786890ef224a28cf513f049799'>Overlapped   Block   Motion
    Compensation: An Estimation-Theoretic Approach</a>. <span class='ecti-1000'>IEEE Transactions on
    </span><span class='ecti-1000'>Image Processing</span>, 3(5):693–699, 1994.
-                                                                  
-
-                                                                  
    </p>
    <p class='bibitem'><span class='biblabel'>
  [6]<span class='bibsp'>   </span></span><a id='Xrao1996techniques'></a>Kamisetty Ramamohan Rao and Jae Jeong Hwang.   <a href='https://scholar.google.es/scholar?hl=es&amp;as_sdt=0%2C5&amp;q=Techniques+and+Standards+for+Image%2C+Video+and+Audio+Coding&amp;btnG='><span class='ecti-1000'>Techniques and
    </span><span class='ecti-1000'>standards for image, video, and audio coding</span></a>, volume 70. Prentice Hall New
    Jersey, 1996.
+                                                                  
+
+                                                                  
    </p>
    <p class='bibitem'><span class='biblabel'>
  [7]<span class='bibsp'>   </span></span><a id='Xzhu2000new'></a>S. Zhu  and  K.-K.  Ma.     <a href='https://www.cl.cam.ac.uk/teaching/1718/SysOnChip/materials.d/mpeg-diamond-search-motion-esimation-zhu-ma-2000.pdf'>A  New  Diamond  Search  Algorithm  for
@@ -344,10 +334,11 @@ encoder.
    </span><span class='ecti-1000'>Processing</span>, 9(2):287–290, 2000.
 </p>
    </div>
-   <div class='footnotes'><!-- l. 136 --><p class='indent'>     <span class='footnote-mark'><a href='#fn1x0-bk' id='fn1x0'><sup class='textsuperscript'>1</sup></a></span><span class='ecrm-0800'>For example, in the MPEG-1 standard, the reference image/s is/are divided in blocks of</span> \(16\times 16\)
-<span class='ecrm-0800'>pixels called </span><span class='ecti-0800'>macroblocks</span><span class='ecrm-0800'>.</span></p>
+   <div class='footnotes'><a id='x1-3003x3'></a>
+<!-- l. 136 --><p class='indent'>     <span class='footnote-mark'><a href='#fn1x0-bk' id='fn1x0'><sup class='textsuperscript'>1</sup></a></span><span class='ecrm-0800'>For example, in the MPEG-1 standard, the reference image/s is/are divided in blocks of</span> \(16\times 16\)
+<span class='ecrm-0800'>pixels called </span><span class='ecti-0800'>macroblocks</span><span class='ecrm-0800'>.</span></p><a id='x1-7002x6'></a>
 <!-- l. 240 --><p class='indent'>     <span class='footnote-mark'><a href='#fn2x0-bk' id='fn2x0'><sup class='textsuperscript'>2</sup></a></span><span class='ecrm-0800'>This means that, even if the images are visually identical, they have different representation,
-</span><span class='ecrm-0800'>and therefore,</span> \({\mathbf E}\ne {\mathbf 0}\)<span class='ecrm-0800'>.</span></p>
+</span><span class='ecrm-0800'>and therefore,</span> \({\mathbf E}\ne {\mathbf 0}\)<span class='ecrm-0800'>.</span></p><a id='x1-7005x6'></a>
 <!-- l. 252 --><p class='indent'>     <span class='footnote-mark'><a href='#fn3x0-bk' id='fn3x0'><sup class='textsuperscript'>3</sup></a></span><span class='ecrm-0800'>This operation implies a filtering to avoid the aliasing after the downsampling.</span></p>        </div>
  
 </body> 

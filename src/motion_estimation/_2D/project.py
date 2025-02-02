@@ -21,7 +21,7 @@ class Projection():
               interpolation_mode=cv2.INTER_LINEAR,
               extension_mode=cv2.BORDER_REPLICATE):
 
-        if self.logger.getEffectiveLevel() <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.DEBUG:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
@@ -45,7 +45,7 @@ class Projection():
 
     def add_coordinates(flow, target):
 
-        if self.logger.getEffectiveLevel() <= logging.INFO:
+        if self.logger.getEffectiveLevel() <= logging.DEBUG:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
