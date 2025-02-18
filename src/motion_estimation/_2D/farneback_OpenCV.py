@@ -41,8 +41,11 @@ class OF_Estimation():
         flags=0                        # cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN
     ):
 
+        for name, value in locals().items():
+            self.logger.info(f"{name}: {value}")
+
         sigma_poly = (N_poly - 1)/4 # Standard deviation of the Gaussian basis used in the polynomial expansion
-        self.logger.debug(f"sigma_poly={sigma_poly}")
+        self.logger.info(f"sigma_poly={sigma_poly}")
         #print(target.shape, reference.shape, flow, target.dtype, reference.dtype)
         flow = cv2.calcOpticalFlowFarneback(
             prev=target,
