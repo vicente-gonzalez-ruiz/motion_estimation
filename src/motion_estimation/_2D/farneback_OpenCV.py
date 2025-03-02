@@ -37,15 +37,16 @@ class OF_Estimation():
         pyramid_levels=PYRAMID_LEVELS, # Number of pyramid layers
         window_side=WINDOW_SIDE,       # Applicability window side
         iterations=ITERATIONS,         # Number of iterations at each pyramid level
-        N_poly=N_POLY,                 # Standard deviation of the Gaussian basis used in the polynomial expansion
+        N_poly=N_POLY,                 # Order of the polynomial expansion
+        sigma_poly=POLY_SIGMA,         # Standard deviation of the Gaussian basis used in the polynomial expansion
         flags=0                        # cv2.OPTFLOW_USE_INITIAL_FLOW | cv2.OPTFLOW_FARNEBACK_GAUSSIAN
     ):
 
         for name, value in locals().items():
-            self.logger.info(f"{name}: {value}")
+            self.logger.debug(f"{name}: {value}")
 
-        sigma_poly = (N_poly - 1)/4 # Standard deviation of the Gaussian basis used in the polynomial expansion
-        self.logger.info(f"sigma_poly={sigma_poly}")
+        #sigma_poly = (N_poly - 1)/4 # Standard deviation of the Gaussian basis used in the polynomial expansion
+        #self.logger.info(f"sigma_poly={sigma_poly}")
         #print(target.shape, reference.shape, flow, target.dtype, reference.dtype)
         flow = cv2.calcOpticalFlowFarneback(
             prev=target,
