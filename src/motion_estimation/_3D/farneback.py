@@ -66,7 +66,7 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
             Optical flow field. flow[i, j, k] is the (z, y, x) displacement for pixel (i, j, k)
         """
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
@@ -238,7 +238,7 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
         model="constant",
         mu=None):
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
@@ -270,7 +270,7 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
         model="constant",
         mu=None): # target and reference double's
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
