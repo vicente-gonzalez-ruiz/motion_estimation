@@ -5,7 +5,7 @@ import numpy as np
 from scipy.ndimage import map_coordinates
 import logging
 import inspect
-class Projection():
+class Project():
     
     def __init__(
         self,

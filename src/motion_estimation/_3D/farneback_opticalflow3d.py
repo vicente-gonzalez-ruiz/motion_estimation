@@ -8,12 +8,12 @@ import logging
 import inspect
 
 # Polynomial expansion
-SPATIAL_SIZE = 9    # Side of the Gaussian applicability window used
+SPATIAL_SIDE = 9    # Side of the Gaussian applicability window used
                     # during the polynomial expansion. Applicability (that is, the relative importance of the points in the neighborhood) size should match the scale of the structures we wnat to estimate orientation for (page 77). However, small applicabilities are more sensitive to noise.
 SIGMA_K = 0.15      # Scaling factor used to calculate the standard
                     # deviation of the Gaussian applicability. The
                     # formula to calculate the standard deviation is
-                    # sigma = sigma_k*(spatial_size - 1).
+                    # sigma = sigma_k*(spatial_side - 1).
 
 # OF estimation
 FILTER_TYPE = "box" # Shape of the filer used to average the flow. It
@@ -53,7 +53,7 @@ class OF_Estimation():
         self,
         target, reference,
         pyramid_levels=PYRAMID_LEVELS,
-        spatial_size=SPATIAL_SIZE,
+        spatial_side=SPATIAL_SIDE,
         iterations=ITERATIONS,
         sigma_k=SIGMA_K,
         filter_type=FILTER_TYPE,
@@ -81,7 +81,7 @@ class OF_Estimation():
             iters=iterations,
             num_levels=pyramid_levels,
             scale=PYRAMID_SCALE,
-            spatial_size=spatial_size,
+            spatial_side=spatial_side,
             sigma_k=sigma_k,
             filter_type=filter_type,
             filter_size=filter_size,
