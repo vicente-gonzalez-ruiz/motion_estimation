@@ -1,4 +1,4 @@
-'''Farneback's optical flow algorithm (3D). See https://github.com/ericPrince/optical-flow.'''
+'''3D Farneback's optical flow estimation. See https://github.com/ericPrince/optical-flow.'''
 
 import numpy as np
 import scipy
@@ -9,8 +9,8 @@ from . import pyramid_gaussian
 import logging
 import inspect
 
-PYRAMID_LEVELS = 3
-WINDOW_SIDE = 5
+PYRAMID_LEVELS = 3 # Only integers
+WINDOW_SIDE = 5 # Only integers
 ITERATIONS = 7
 N_POLY = 7
 DOWN_SCALE = 2 # Only integers
@@ -241,8 +241,7 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
         window_side=WINDOW_SIDE,
         iterations=ITERATIONS,
         model="constant",
-        mu=None
-    ):
+        mu=None):
 
         if self.logging_level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
