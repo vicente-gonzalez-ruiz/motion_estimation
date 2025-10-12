@@ -17,14 +17,9 @@ DOWN_SCALE = 2 # Only integers
 
 class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.Gaussian_Pyramid):
 
-    def __init__(self, logging_level=logging.INFO):
-        self.logging_level = logging_level
-        #logging.basicConfig(format="[%(filename)s:%(lineno)s %(funcName)s()] %(message)s")
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging_level)
-        #self.PE = polinomial_expansion.Polinomial_Expansion(logging_level)
-        polinomial_expansion.Polinomial_Expansion.__init__(self, logging_level)
-        pyramid_gaussian.Gaussian_Pyramid.__init__(self, logging_level)
+    def __init__(self, logger):
+        polinomial_expansion.Polinomial_Expansion.__init__(self, logger)
+        pyramid_gaussian.Gaussian_Pyramid.__init__(self, logger)
 
     def flow_iterative(
         self,

@@ -9,9 +9,8 @@ NUM_LEVELS = 3
 
 class Gaussian_Pyramid:
 
-    def __init__(self, logging_level=logging.INFO):
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging_level)
+    def __init__(self, logger):
+        self.logger = logger
 
     def get_pyramid(self, volume, num_levels, down_scale=DOWN_SCALE):
 
