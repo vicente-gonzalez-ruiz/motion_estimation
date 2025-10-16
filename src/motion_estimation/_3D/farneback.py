@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 '''3D Farneback's optical flow estimation. See https://github.com/ericPrince/optical-flow.'''
 
 import numpy as np
@@ -8,6 +10,20 @@ from . import polinomial_expansion
 from . import pyramid_gaussian
 import logging
 import inspect
+
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
+
+import numpy as np
+from scipy.ndimage import correlate1d
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
+__all__ = ["FlowIterative3DOptions", "__version__", "flow_iterative_3d", "poly_exp_3d"]
+
+
+__version__ = "1.1.0" # Version for 3D implementation
+
 
 PYRAMID_LEVELS = 3 # Only integers
 WINDOW_SIDE = 5 # Only integers
@@ -21,7 +37,153 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
         polinomial_expansion.Polinomial_Expansion.__init__(self, logger)
         pyramid_gaussian.Gaussian_Pyramid.__init__(self, logger)
 
-    def flow_iterative(
+    
+    def flow_iterative[DType: np.floating[Any]](self,  # noqa: PLR0913, PLR0915
+        f1: NDArray[DType],
+        f2: NDArray[DType],
+        c1: NDArray[DType],
+        c2: NDArray[DType],
+        *,
+        sigma_poly: float,
+        sigma_flow: float,
+        num_iter: int = 1,
+        d: NDArray[DType] | None = None,
+        model: Literal["constant", "affine"] = "constant",
+        mu: float | None = None,
+    ) -> NDArray[DType]:
+        """
+        Calculates 3D optical flow using the iterative Farneback algorithm.
+    
+        Parameters
+        ----------
+        f1, f2
+            First and second 3D volumes.
+        c1, c2
+            Certainty maps for the first and second volumes.
+        sigma_poly
+            Sigma for the polynomial expansion kernel.
+        sigma_flow
+            Sigma for the flow integration window.
+        num_iter
+            Number of iterations to perform.
+        d
+            Initial displacement field (optional).
+        model
+            Motion model to use ('constant' or 'affine').
+        mu
+            Weighting factor for the global motion model. If None, it's auto-determined.
+    
+        Returns
+        -------
+        d
+            3D optical flow field. d[z, y, x] is the (dz, dy, dx) displacement.
+        """
+        dtype = f1.dtype
+    
+        # Calculate polynomial expansions for both volumes
+        A1, B1, _ = self.poly_expand(f1, c1, sigma_poly)
+        A2, B2, _ = self.poly_expand(f2, c2, sigma_poly)
+    
+        # Create a 3D grid of voxel coordinates
+        coords = np.indices(f1.shape, dtype=int).transpose(1, 2, 3, 0) # z, y, x
+    
+        # Initialize displacement field if not provided
+        if d is None:
+            d = np.zeros((*f1.shape, 3), dtype=dtype)
+    
+        # Applicability window for flow calculation
+        n_flow = int(4 * sigma_flow + 1)
+        xw = np.arange(-n_flow, n_flow + 1, dtype=dtype)
+        w = np.exp(-(xw**2) / (2 * sigma_flow**2))
+    
+        # --- Setup motion model parametrization matrix S ---
+        if model == "constant":
+            S = np.eye(3, dtype=dtype)
+            num_params = 3
+        elif model == "affine":
+            num_params = 12  # 3 translation + 9 for matrix
+            S = np.zeros((*f1.shape, 3, num_params), dtype=dtype)
+            z, y, x = coords[..., 0], coords[..., 1], coords[..., 2]
+            # dz = p0 + p1*z + p2*y + p3*x
+            S[..., 0, 0] = 1; S[..., 0, 1] = z; S[..., 0, 2] = y; S[..., 0, 3] = x
+            # dy = p4 + p5*z + p6*y + p7*x
+            S[..., 1, 4] = 1; S[..., 1, 5] = z; S[..., 1, 6] = y; S[..., 1, 7] = x
+            # dx = p8 + p9*z + p10*y + p11*x
+            S[..., 2, 8] = 1; S[..., 2, 9] = z; S[..., 2, 10] = y; S[..., 2, 11] = x
+        else:
+            msg = "Invalid parametrization model for 3D"
+            raise ValueError(msg)
+    
+        S_T = S.swapaxes(-1, -2)
+    
+        for _ in range(num_iter):
+            # Discretize displacement field for neighborhood lookup
+            d_ = d.astype(int)
+            coords_ = coords + d_
+    
+            # Constrain coordinates to be within the volume bounds
+            vol_shape = np.array(f1.shape)
+            coords_2 = np.maximum(np.minimum(coords_, vol_shape - 1), 0)
+            off_volume = np.any(coords_ != coords_2, axis=-1)
+            coords_ = coords_2
+    
+            # Get certainty from warped coordinates, zeroing out-of-bounds points
+            c_ = c2[coords_[..., 0], coords_[..., 1], coords_[..., 2]]
+            c_[off_volume] = 0
+    
+            # Calculate A and ΔB from the paper's equations
+            A = (A1 + A2[coords_[..., 0], coords_[..., 1], coords_[..., 2]]) / 2
+            A *= c_[..., None, None]  # Apply certainty
+    
+            delB = -0.5 * (B2[coords_[..., 0], coords_[..., 1], coords_[..., 2]] - B1) + (A @ d_[..., None])[..., 0]
+            delB *= c_[..., None] # Apply certainty
+    
+            # Pre-calculate components for solving the linear system
+            A_T = A.swapaxes(-1, -2)
+            ATA = S_T @ A_T @ A @ S
+            ATb = (S_T @ A_T @ delB[..., None])[..., 0]
+    
+            if mu == 0:
+                # Local model only
+                G = correlate1d(ATA, w, axis=0, mode="constant", cval=0)
+                G = correlate1d(G, w, axis=1, mode="constant", cval=0)
+                G = correlate1d(G, w, axis=2, mode="constant", cval=0)
+    
+                h = correlate1d(ATb, w, axis=0, mode="constant", cval=0)
+                h = correlate1d(h, w, axis=1, mode="constant", cval=0)
+                h = correlate1d(h, w, axis=2, mode="constant", cval=0)
+    
+                p = np.linalg.solve(G, h[..., None])[..., 0].astype(dtype)
+                d = (S @ p[..., None])[..., 0]
+    
+            else:
+                # Global model with local refinement
+                G_avg = np.mean(ATA, axis=(0, 1, 2))
+                h_avg = np.mean(ATb, axis=(0, 1, 2))
+                p_avg = np.linalg.solve(G_avg, h_avg[..., None])[..., 0]
+                d_avg = (S @ p_avg[..., None])[..., 0]
+    
+                if mu is None:
+                    mu = 0.5 * np.trace(G_avg)
+    
+                G_local = A_T @ A
+                h_local = (A_T @ delB[..., None])[..., 0]
+    
+                G = correlate1d(G_local, w, axis=0, mode="constant", cval=0)
+                G = correlate1d(G, w, axis=1, mode="constant", cval=0)
+                G = correlate1d(G, w, axis=2, mode="constant", cval=0)
+    
+                h = correlate1d(h_local, w, axis=0, mode="constant", cval=0)
+                h = correlate1d(h, w, axis=1, mode="constant", cval=0)
+                h = correlate1d(h, w, axis=2, mode="constant", cval=0)
+    
+                d = np.linalg.solve(G + mu * np.eye(3), (h + mu * d_avg)[..., None])[..., 0]
+    
+        return d
+
+
+    
+    def flow_iterative_old(
         self,
         f1, f2, c1, c2,
         flow=None,
@@ -231,7 +393,7 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
     def get_flow_iteration(
         self,
         f1, f2, c1, c2,
-        flow=None,
+        d=None, # flow
         N_poly=N_POLY,
         window_side=WINDOW_SIDE,
         iterations=ITERATIONS,
@@ -252,8 +414,8 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
         sigma_flow = (window_side - 1)/4
         return self.flow_iterative(
             f1=f1, f2=f2, c1=c1, c2=c2,
-            flow=flow, sigma=sigma, sigma_flow=sigma_flow,
-            iterations=iterations,
+            d=d, sigma_poly=sigma, sigma_flow=sigma_flow,
+            num_iter=iterations,
             model=model,
             mu=mu)
 
@@ -371,7 +533,7 @@ class OF_Estimation(polinomial_expansion.Polinomial_Expansion, pyramid_gaussian.
 
             flow = self.get_flow_iteration(
                 f1=pyr1, f2=pyr2, c1=c1_, c2=c2_,
-                flow=flow,
+                d=flow, # flow
                 N_poly=N_poly,
                 window_side=window_side,
                 iterations=iterations,

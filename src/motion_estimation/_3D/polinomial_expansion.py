@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 '''Farneback's polinomial expansion (3D). See https://github.com/ericPrince/optical-flow'''
 
 import numpy as np
@@ -7,12 +9,137 @@ import inspect
 #from scipy.linalg import lstsq
 #from scipy.optimize import least_squares
 
+
+from typing import TYPE_CHECKING, Any, Literal, TypedDict
+
+import numpy as np
+from scipy.ndimage import correlate1d
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+
+__all__ = ["FlowIterative3DOptions", "__version__", "flow_iterative_3d", "poly_exp_3d"]
+
+
+__version__ = "1.1.0" # Version for 3D implementation
+
 class Polinomial_Expansion():
 
     def __init__(self, logger):
         self.logger = logger
-        
-    def poly_expand(self, f, c, sigma):
+
+    def poly_expand[DType: np.floating[Any]](self,
+        f: NDArray[DType], c: NDArray[DType], sigma: float
+    ) -> tuple[NDArray[DType], NDArray[DType], NDArray[DType]]:
+        """
+        Calculates the local polynomial expansion of a 3D signal.
+    
+        This is a 3D extension of the method described by Farneback.
+        The signal `f` is approximated by the quadratic polynomial:
+        $f ~ x^T A x + B^T x + C$
+    
+        Where x = [z, y, x]^T. The function solves for the coefficients
+        (A, B, C) at each point in the 3D volume.
+    
+        Parameters
+        ----------
+        f
+            Input 3D signal (volume).
+        c
+            Certainty of the signal at each point.
+        sigma
+            Standard deviation of the Gaussian applicability kernel.
+    
+        Returns
+        -------
+        A
+            Quadratic term of the polynomial expansion (shape: ..., 3, 3).
+        B
+            Linear term of the polynomial expansion (shape: ..., 3).
+        C
+            Constant term of the polynomial expansion (shape: ...).
+        """
+        dtype = np.float32 #f.dtype
+    
+        # Applicability kernel (1D for separability)
+        n = int(4 * sigma + 1)
+        x_kernel = np.arange(-n, n + 1, dtype=dtype)
+        a = np.exp(-(x_kernel**2) / (2 * sigma**2), dtype=dtype)
+    
+        # Basis vectors for the 10 polynomial parameters in 3D:
+        # r = [c, bz, by, bx, azz, ayy, axx, azy, azx, ayx]
+        # (Constant, linear_z, linear_y, linear_x, quad_zz, quad_yy, quad_xx, ...)
+        ones = np.ones_like(x_kernel)
+        x1 = x_kernel
+        x2 = x_kernel**2
+    
+        # Basis for Z-dimension correlation
+        bz = np.stack([ones, x1, ones, ones, x2, ones, ones, x1, x1, ones], axis=-1)
+        # Basis for Y-dimension correlation
+        by = np.stack([ones, ones, x1, ones, ones, x2, ones, x1, ones, x1], axis=-1)
+        # Basis for X-dimension correlation
+        bx = np.stack([ones, ones, ones, x1, ones, ones, x2, ones, x1, x1], axis=-1)
+    
+        # Pre-calculate product of certainty and signal
+        cf = c * f
+    
+        # G and v are used to solve the linear system G*r = v for polynomial coefficients r
+        num_params = 10
+        G = np.empty((*f.shape, num_params, num_params), dtype=dtype)
+        v = np.empty((*f.shape, num_params), dtype=dtype)
+    
+        # --- Apply separable correlations across Z, Y, and X axes ---
+    
+        # Z-axis
+        ab_z = np.einsum("i,ij->ij", a, bz)
+        abb_z = np.einsum("ij,ik->ijk", ab_z, bz)
+        for i in range(num_params):
+            for j in range(num_params):
+                G[..., i, j] = correlate1d(c, abb_z[..., i, j], axis=0, mode="constant", cval=0)
+            v[..., i] = correlate1d(cf, ab_z[..., i], axis=0, mode="constant", cval=0)
+    
+        # Y-axis
+        ab_y = np.einsum("i,ij->ij", a, by)
+        abb_y = np.einsum("ij,ik->ijk", ab_y, by)
+        for i in range(num_params):
+            for j in range(num_params):
+                G[..., i, j] = correlate1d(G[..., i, j], abb_y[..., i, j], axis=1, mode="constant", cval=0)
+            v[..., i] = correlate1d(v[..., i], ab_y[..., i], axis=1, mode="constant", cval=0)
+    
+        # X-axis
+        ab_x = np.einsum("i,ij->ij", a, bx)
+        abb_x = np.einsum("ij,ik->ijk", ab_x, bx)
+        for i in range(num_params):
+            for j in range(num_params):
+                G[..., i, j] = correlate1d(G[..., i, j], abb_x[..., i, j], axis=2, mode="constant", cval=0)
+            v[..., i] = correlate1d(v[..., i], ab_x[..., i], axis=2, mode="constant", cval=0)
+    
+    
+        # Solve for polynomial coefficients r at each point
+        r = np.linalg.solve(G, v[..., None])[..., 0].astype(dtype)
+    
+        # Reconstruct A (quadratic), B (linear), and C (constant) terms from r
+        A = np.empty((*f.shape, 3, 3), dtype=dtype)
+        A[..., 0, 0] = r[..., 4]  # azz
+        A[..., 1, 1] = r[..., 5]  # ayy
+        A[..., 2, 2] = r[..., 6]  # axx
+        A[..., 0, 1] = A[..., 1, 0] = r[..., 7] / 2  # azy
+        A[..., 0, 2] = A[..., 2, 0] = r[..., 8] / 2  # azx
+        A[..., 1, 2] = A[..., 2, 1] = r[..., 9] / 2  # ayx
+    
+        B = np.empty((*f.shape, 3), dtype=dtype)
+        B[..., 0] = r[..., 1]  # bz
+        B[..., 1] = r[..., 2]  # by
+        B[..., 2] = r[..., 3]  # bx
+    
+        C = r[..., 0]
+    
+        return A, B, C
+
+
+
+    
+    def poly_expand_mio(self, f, c, sigma):
         """
         Calculates the local polynomial expansion of a 3D signal.
         
@@ -41,7 +168,7 @@ class Polinomial_Expansion():
             Constant term of polynomial expansion
         """
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
@@ -54,15 +181,15 @@ class Polinomial_Expansion():
         # Calculate applicability kernel (1D because it is separable)
         poly_n = int(4 * sigma + 1)
         x = np.arange(-poly_n, poly_n + 1, dtype=np.int32)
-        a = np.exp(-(x**2) / (2 * sigma**2))  # a: applicability kernel [n]
+        a = np.exp(-(x**2) / (2 * sigma**2))  # a: applicability kernel x[n]
     
         # b: calculate b from the paper. Calculate separately for X, Y and Z dimensions
         # [n, 6]
         def _1(a):
             return np.ones(a.shape)
-        bx = np.stack([_1(a),     x, _1(a), _1(a),  x**2, _1(a), _1(a),    x,    x, _1(a)], axis=-1)
-        by = np.stack([_1(a), _1(a),     x, _1(a), _1(a),  x**2, _1(a),    x, _1(a),    x], axis=-1)
         bz = np.stack([_1(a), _1(a), _1(a),     x, _1(a), _1(a), x**2, _1(a),     x,    x], axis=-1)
+        by = np.stack([_1(a), _1(a),     x, _1(a), _1(a),  x**2, _1(a),    x, _1(a),    x], axis=-1)
+        bx = np.stack([_1(a),     x, _1(a), _1(a),  x**2, _1(a), _1(a),    x,    x, _1(a)], axis=-1)
 
         # Pre-calculate product of certainty and signal
         cf = c * f
@@ -71,7 +198,7 @@ class Polinomial_Expansion():
         # r is the parametrization of the 2nd order polynomial for f
         G = np.empty(list(f.shape) + [bx.shape[-1]] * 2)
         v = np.empty(list(f.shape) + [bx.shape[-1]])
-    
+
         # Apply separable cross-correlations
     
         # Pre-calculate quantities recommended in paper (Eq. 4.6 in the thesis)
@@ -184,7 +311,7 @@ class Polinomial_Expansion():
 
     def expand(self, f, c, window_side):
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
