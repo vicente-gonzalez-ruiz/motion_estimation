@@ -93,7 +93,7 @@ class OF_Estimation():
             iters=iterations,
             num_levels=pyramid_levels,
             scale=PYRAMID_SCALE,
-            gauss_size=gauss_size,
+            spatial_size=gauss_size,
             sigma_k=sigma_k,
             filter_type=filter_type,
             filter_size=filter_size,
