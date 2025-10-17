@@ -53,7 +53,7 @@ class OF_Estimation():
         self,
         target, reference,
         pyramid_levels=PYRAMID_LEVELS,
-        gauss_size=SPATIAL_SIDE,
+        gauss_size=GAUSS_SIZE,
         iterations=ITERATIONS,
         sigma_k=SIGMA_K,
         filter_type=FILTER_TYPE,
