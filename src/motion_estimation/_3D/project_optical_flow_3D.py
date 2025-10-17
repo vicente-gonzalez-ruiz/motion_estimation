@@ -1,5 +1,6 @@
 import numpy as np
-import optical_flow_3D
+from optical_flow_3D import OF3D
+#import optical_flow_3D
 import inspect
 import logging
 
@@ -29,7 +30,7 @@ class Project():
                     except TypeError:
                         print(f"({type(arg)}) {arg}: {values[arg]}")
         
-        projection = optical_flow_3D.generate_inverse_image(
+        projection = OF3D.generate_inverse_image(
             image=vol,
             vx=flow[2],
             vy=flow[1],
