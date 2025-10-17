@@ -77,7 +77,7 @@ class OF_Estimation():
                 else:
                     print(f"{arg}: {values[arg]}")
 
-        farneback = OF3D.Farneback3D(
+        farneback = optical_flow_3D.Farneback3D(
             iters=iterations,
             num_levels=pyramid_levels,
             scale=PYRAMID_SCALE,
