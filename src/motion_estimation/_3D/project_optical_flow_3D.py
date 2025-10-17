@@ -7,7 +7,7 @@ class Project():
     
     def __init__(
         self,
-        logger=logger
+        logger
     ):
         #self.logger = logging.getLogger(__name__)
         #self.logger.setLevel(logging_level)
