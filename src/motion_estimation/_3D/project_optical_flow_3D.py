@@ -29,7 +29,7 @@ class Project():
                     except TypeError:
                         print(f"({type(arg)}) {arg}: {values[arg]}")
         
-        projection = opticalflow3D.helpers.generate_inverse_image(
+        projection = optical_flow_3D.generate_inverse_image(
             image=vol,
             vx=flow[2],
             vy=flow[1],
