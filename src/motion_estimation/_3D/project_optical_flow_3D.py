@@ -7,15 +7,16 @@ class Projection():
     
     def __init__(
         self,
-        logging_level=logging.INFO
+        logger=logger
     ):
         #self.logger = logging.getLogger(__name__)
         #self.logger.setLevel(logging_level)
-        self.logging_level = logging_level
+        #self.logging_level = logging_level
+        self.logger = logger
 
-    def remap(self, volume, flow, use_gpu=True):
+    def remap(self, vol, flow, use_gpu=True):
 
-        if self.logging_level < logging.INFO:
+        if self.logger.level < logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
@@ -29,7 +30,7 @@ class Projection():
                         print(f"({type(arg)}) {arg}: {values[arg]}")
         
         projection = opticalflow3D.helpers.generate_inverse_image(
-            image=volume,
+            image=vol,
             vx=flow[2],
             vy=flow[1],
             vz=flow[0],
