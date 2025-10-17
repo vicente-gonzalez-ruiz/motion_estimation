@@ -1,6 +1,7 @@
 '''Farneback's optical flow algorithm (3D) using optical_flow_3D.'''
 
-import optical_flow_3D # pip install "optical_flow_3D @ git+https://github.com/vicente-gonzalez-ruiz/optical_flow_3D"
+#import optical_flow_3D # pip install "optical_flow_3D @ git+https://github.com/vicente-gonzalez-ruiz/optical_flow_3D"
+from optical_flow_3D import OF3D
 from numba.core.errors import NumbaPerformanceWarning
 import warnings; warnings.filterwarnings("ignore", category=NumbaPerformanceWarning)
 import numpy as np
@@ -77,7 +78,7 @@ class OF_Estimation():
                 else:
                     print(f"{arg}: {values[arg]}")
 
-        farneback = optical_flow_3D.Farneback3D(
+        farneback = OF3D.Farneback3D(
             iters=iterations,
             num_levels=pyramid_levels,
             scale=PYRAMID_SCALE,
