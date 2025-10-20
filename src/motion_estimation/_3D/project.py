@@ -9,9 +9,9 @@ class Project():
     
     def __init__(
         self,
-        logging_level=logging.INFO
+        logger
     ):
-        self.logging_level = logging_level
+        self.logger = logger
 
     def remap(self,
               vol,
@@ -19,7 +19,7 @@ class Project():
               interpolation_mode='linear',
               extension_mode='nearest'):
 
-        if self.logging_level < logging.INFO:
+        if self.logger.level < logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
@@ -56,7 +56,7 @@ class Project():
     # Untested
     def add_coordinates(self, flow, target):
 
-        if self.logging_level < logging.INFO:
+        if self.logger.level < logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
