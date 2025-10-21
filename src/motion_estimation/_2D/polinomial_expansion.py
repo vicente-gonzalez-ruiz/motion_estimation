@@ -40,7 +40,7 @@ class Polinomial_Expansion():
             Constant term of polynomial expansion
         """
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
