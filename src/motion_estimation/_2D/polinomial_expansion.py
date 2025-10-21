@@ -7,10 +7,8 @@ import inspect
 
 class Polinomial_Expansion():
 
-    def __init__(self, logging_level):
-        self.logging_level = logging_level
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging_level)
+    def __init__(self, logger):
+        self.logger = logger
 
     def poly_expand(self, f, c, sigma):
         """
@@ -138,7 +136,7 @@ class Polinomial_Expansion():
 
     def expand(self, f, c, window_side):
 
-        if self.logging_level <= logging.INFO:
+        if self.logger.level <= logging.INFO:
             print(f"\nFunction: {inspect.currentframe().f_code.co_name}")
             args, _, _, values = inspect.getargvalues(inspect.currentframe())
             for arg in args:
