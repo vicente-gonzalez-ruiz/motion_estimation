@@ -417,7 +417,91 @@ then, for a pure small displacement, we expect that
 \end{equation}
 Solving $d$ for the linear terms,
 \begin{equation}
-  d=\frac{A^{-1}(b-b_2)}{2}
+  d=\frac{A^{-1}(b-b_2)}{2}.
+\end{equation}
+Notice that $d$ represents the displacement that applied to $f_1$ look at much as possible like $f_2$. In other words,
+\begin{equation}
+  f_2(\mathbf{x}) \approx f_1(\mathbf{x} - \mathbf{d}).
+\end{equation}
+
+\subsection*{The Aperture Problem}
+Between two consecutive images of a sequence we can suppose that
+\begin{equation}
+  I(x, y, t) \approx I(x+u, y+v, t+1)
+\end{equation}
+where $[u v]^T$ is a motion vector (the flow) we are interested in,
+and $t$ usually represents time.
+
+Using a first-order Taylor expansion on the RHS, we get that
+\begin{equation}
+  I(x+u, y+v, t+1) \approx I(x, y, t) + \frac{\partial I}{\partial x}u + \frac{\partial I}{\partial y}v + \frac{\partial I}{\partial t},
+\end{equation}
+where if we define $I_x = \frac{\partial I}{\partial x}$ (horizontal gradient), $I_x = \frac{\partial I}{\partial y}$ (vertical gradient), and $I_t = \frac{\partial I}{\partial t}$ (temporal gradient), and supposing that the displacement does not affect to their intensity, i.e.,
+\begin{equation}
+  I \approx I + I_xu + I_yv + I_t
+\end{equation}
+we arrive to the Optical Flow Constraint Equation:
+\begin{equation}
+  I_xu + I_yv + I_t = 0
+\end{equation}
+As we can see, we have only one equation and two unknows ($u$ and $v$). This is the mathematical statement of the Aperture Problem. As we can see, if we are in a flat region, $I_x\approx 0$, $I_y\approx 0$, so the equation becomes $0\approx -I_t$, which is useless. On a stright edge, we only get information about the motion perpendicular (normal) to the edge.
+
+\section*{The Least-Squares solution}
+Therefore, to find $d=[u v]^T$ we must impose anoter restriction
+(equation). This typically is that the flow should be constant for all
+pixels in a small neighborhood (a window centered at the pixel in which we are interested to determine $d$. Depending on the size of the neighborhood, we create an overdetemined equations system, which in matrix form is
+\begin{equation}
+  \underbrace{
+\begin{bmatrix}
+I_{x_1} & I_{y_1} \\
+I_{x_2} & I_{y_2} \\
+\vdots & \vdots \\
+I_{x_n} & I_{y_n}
+\end{bmatrix}
+}_{\mathbf{A}}
+\underbrace{
+\begin{bmatrix}
+u \\
+v
+\end{bmatrix}
+}_{\mathbf{d}}
+=
+\underbrace{
+\begin{bmatrix}
+-I_{t_1} \\
+-I_{t_2} \\
+\vdots \\
+-I_{t_n}
+\end{bmatrix}.
+}_{\mathbf{b}}
+\end{equation}
+We cannot solve this exactaly, so we find the motion vector $\mathbf{d}$ that minimizes the squared error
+\begin{equation}
+  \text{min}_d||\mathbf{A}\mathbf{d}-\mathbf{b}||^2.
+\end{equation}
+The standard least-sauares solution is found by solving the normal equations
+\begin{equation}
+  (\mathbf{A}^T\mathbf{A})d=\mathbf{A}^T\mathbf{d},
+\end{equation}
+where $\mathbf{A}^T\mathbf{A}$ is a $2\times 2$ matrix that sums the spatial gradient information (the ``structure'') across the entire window
+\begin{equation}
+  \mathbf{A}^T\mathbf{A} = \sum_{i\in W}
+\begin{bmatrix}
+I_{x_i}^2 I_{x_i}I_{y_i} \\
+I_{x_i}I_{y_i} I_{y_i}^2
+\end{bmatrix},
+\end{equation}
+and $\mathbf{A}^T\mathbf{b}$ is a $2\times 1$ vector that sums the motion evidence
+\begin{equation}
+  \mathbf{A}^T\mathbf{b} = \sum_{i\in W}
+\begin{bmatrix}
+-I_{x_i}I_{t_i} \\
+-I_{y_i}I_{t_i}
+\end{bmatrix}
+\end{equation}
+The final motion is then found by
+\begin{equation}
+  \mathbf{d} = (\mathbf{A}^T\mathbf{A})^{-1}(\mathbf{A}^T\mathbf{b})
 \end{equation}
 
 \subsection{Practical issues and solutions}
@@ -433,7 +517,10 @@ Solving $d$ for the linear terms,
     for wheighting their contribution, and solving $d$ in
     least-squares sense. This is the solution proposed by
     Farneb\"ack'. See next section.
-  \item Rely on pyramids.
+  \item Rely on pyramids. This helps to capture large motions (a big
+    pixel movement in the full-resolution image becomes a small,
+    manageable movement in the low-resolution (top) levels of the
+    pyramid).
   \end{enumerate}
 \end{enumerate}
 
@@ -456,7 +543,7 @@ Therefore, when $A^1_i$ is not invertible, considering also the Gaussian weights
 \begin{equation}
   w_i = \exp\left( -\frac{||x_i-x_0||^2}{2\sigma^2} \right),
 \end{equation}
-we can build the overdetermined linear system
+(notice that this downweight distant neighbors) we can build the overdetermined linear system
 \begin{equation}
   \begin{bmatrix}
 2w_1A^1_1 \\
@@ -472,7 +559,7 @@ w_2(b^1_2-b^2_2) \\
 w_N(b^1_N-b^2_N) \\
 \end{bmatrix}
 \end{equation}
-Notice that since $N>1$ (the number of pixel in the window), at least we have $2N=4$ equations for only two unknowns (the components of $d$). The best $d$ (in the least-squares sense) minimizes
+Notice that since $N>1$ (the number of pixel in the window), at least we have $2N=4$ equations for only two unknowns (the components of $d$). The best $d$ (in the least-squares sense) minimizes the error
 \begin{equation}
   E(d) = \sum_i w_i ||b^2_i - b^1_i + 2A^1_id||^2.
 \end{equation}
@@ -496,6 +583,9 @@ This is a $2\times 2$ linear system (for 2D flow, obviously), easely solvable fo
 \begin{equation}
   d = \frac{1}{2}\left( \sum_i w_iA_i^TA_i \right)^{-1}\left(\sum_i w_iA_i^T(b_i-b^2_i)\right).
 \end{equation}
+
+\section*{Example}
+Let's 
 
 %}}}
 
